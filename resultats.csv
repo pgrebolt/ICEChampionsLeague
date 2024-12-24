@@ -313,8 +313,8 @@ Rebeca,Dani,Guille,Luis,0,3
 Antía,Rebeca,Guille,Luis,3,2
 Antía,Rebeca,Guille,Dani,1,3
 Antía,Luis,Guille,Dani,1,3
-Víctor,Luis,Pedro,Antía ,3,1
-Víctor,Luis,Pedro,Antía ,3,1
+Víctor,Luis,Pedro,Antía,3,1
+Víctor,Luis,Pedro,Antía,3,1
 Pedro,Luis,Antía,Víctor,1,3
 Pedro,Luis,Antía,Víctor,1,3
 Antía,Luis,Víctor,Pedro,0,3
@@ -331,3 +331,9 @@ Antía,Pablo,Alejandro,Víctor,1,3
 Guille,Luis,Alejandro,Víctor,1,3
 Pedro,Pau,Alejandro,Víctor,3,2
 Pau,Luis,Antía,Víctor,2,3
+Guille,Luis,Rebeca,Antía,1,3
+Guille,Luis,Rebeca,Antía,1,3
+Guille,Luis,Rebeca,Antía,3,2
+Antía,Guille,Luis,Rebeca,3,1
+Antía,Guille,Luis,Rebeca,3,1
+Rebeca,Guille,Antía,Luis,1,3
