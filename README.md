@@ -8,6 +8,9 @@ Canvieu el que cregueu oportú!
 
 ## Resultats de la 1a temporada
 Victòries / Partit : Víctor
+
 Gols / Partit: Pau
+
 Millor parella: Víctor i Pedro
+
 Pitjor parella: Simone i Pedro
