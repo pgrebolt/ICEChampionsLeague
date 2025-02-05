@@ -3,6 +3,7 @@
 ## Resultats més recents
 [WinPlayed dataframe](results/winplayed_stats.html)
 ![Figure](results/winplayed_stats.png)
+![Figure](results/frequencies.png)
 
 
 
