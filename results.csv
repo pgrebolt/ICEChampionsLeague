@@ -85,3 +85,14 @@ D,Jugador 1,Jugador 2,Jugador 3,Jugador 4,Gols 1,Gols 2,Gols 3,Gols 4,Local,Visi
 14,Antía,Dani,Rebeca,Víctor,2,1,,2,3,2,Local
 14,Antía,Dani,Pau,Luis,,1,1,2,1,3,Visitant
 14,Antía,Dani,Pau,Luis,,,1,2,0,3,Visitant
+15,Rebeca,Antía,Guille,Dani,0,1,0,3,1,3,Visitant
+15,Rebeca,Maider,Guille,Dani,1,0,0,3,1,3,Visitant
+15,Maider,Antía,Rebeca,Guille,1,2,0,2,3,2,Local
+15,Maider,Antía,Rebeca,Dani,1,0,0,3,1,3,Visitant
+15,Antía,Guille,Rebeca,Dani,0,1,0,3,1,3,Visitant
+15,Antía,Guille,Maider,Rebeca,2,1,1,1,3,2,Local
+16,Antía,Elena,Luis,Pau,,1,,3,1,3,Visitant
+16,Dani,Elena,Luis,Pau,2,,,1,3,1,Local
+16,Dani,Elena,Antía,Pau,1,,2,1,1,3,Visitant
+16,Dani,Luis,Antía,Pau,,1,1,1,1,3,Visitant
+16,Luis,Elena,Pau,Antía,,,2,1,0,3,Visitant
