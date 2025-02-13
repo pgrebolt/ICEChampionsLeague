@@ -107,3 +107,8 @@ D,Jugador 1,Jugador 2,Jugador 3,Jugador 4,Gols 1,Gols 2,Gols 3,Gols 4,Local,Visi
 18,Pau,Luis,Rebeca,Gisela,2,1,1,,3,1,Local
 18,Pau,Luis,Guille,Elena,1,2,2,,3,2,Local
 18,Pau,Luis,Gisela,Rebeca,1,2,,,3,0,Local
+19,Víctor,Rebeca,Pau,Antía,3,,1,,3,1,Local
+19,Víctor,Rebeca,Pedro,Luis,1,,1,2,1,3,Visitant
+19,Antía,Pau,Pedro,Luis,2,,2,1,2,3,Visitant
+19,Antía,Pau,Pedro,Luis,2,,2,1,2,3,Visitant
+19,Antía,Pau,Pedro,Luis,2,1,,1,3,1,Local
