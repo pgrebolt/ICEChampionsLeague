@@ -204,3 +204,15 @@ D,Jugador 1,Jugador 2,Jugador 3,Jugador 4,Gols 1,Gols 2,Gols 3,Gols 4,Local,Visi
 36,Simone,Elena,Dani,Luis,1,,2,1,1,3,Visitant
 36,Baptiste,Pau,Dani,Luis,,2,,3,2,3,Visitant
 36,Baptiste,Pau,Dani,Luis,1,,1,2,1,3,Visitant
+37,Dani,Rebeca,Pau,Luis,2,,2,1,2,3,Visitant
+37,Pedro,Rebeca,Pau,Luis,3,,1,,3,1,Local
+37,Pedro,Luis,Dani,Pau,1,1,,3,2,3,Visitant
+37,Pedro,Luis,Dani,Pau,2,1,1,,3,1,Local
+37,Pedro,Luis,Dani,Pau,,1,1,2,1,3,Visitant
+37,Pedro,Luis,Dani,Pau,1,1,1,2,2,3,Visitant
+38,Antía,Pau,Elena,Luis,,3,,1,3,1,Local
+38,Antía,Pau,Gisela,Luis,1,1,,,3,0,Local
+38,Antía,Pau,Dani,Elena,1,2,,,3,0,Local
+38,Antía,Pau,Elena,Gisela,1,2,,,3,0,Local
+38,Antía,Pau,Dani,Gisela,,3,1,,3,1,Local
+38,Antía,Pau,Dani,Elena,,3,1,,3,1,Local
