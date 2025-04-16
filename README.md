@@ -5,7 +5,9 @@ Canvieu el que cregueu oportú!
 
 ## Enllaços als outputs
 [Last standings table](results/standings.md)
+
 [Stats graph over matchdays](results/winplayed_stats.png)
+
 [Team stats graph](results/frequencies.png)
 
 ## Sistema ELO
