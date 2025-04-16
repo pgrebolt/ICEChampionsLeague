@@ -31,7 +31,7 @@ Pel nostre cas, considerarem un ELO en posicions ofensives i un ELO en posicions
 $$ R_p (\text{atacant}) = \mu \cdot \left(\frac{\text{Gols anotats}}{3} \right) + \lambda \cdot \left( 1- \frac{\text{Gols rebuts}}{3} \right) $$
 $$ R_p (\text{defensor}) = \mu \cdot \left( 1 - \frac{\text{Gols rebuts}}{3} \right) + \lambda \cdot \left( \frac{\text{Gols anotats}}{3} \right) $$
 
-on $\mu = 0.7$ i $\lambda = 0.3$ són dos paràmetres arbitraris que ponderen l'activitat defensiva i ofensiva del defensor.
+on $\mu = 0.7$ i $\lambda = 0.3$ són dos paràmetres arbitraris que ponderen l'activitat defensiva i ofensiva del jugador.
 
 ## Resultats de la 1a temporada
 Victòries / Partit : Víctor
