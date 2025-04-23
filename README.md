@@ -4,11 +4,19 @@ Aquest repositori inclou tots els codis per recopilar i analitzar els resultats 
 Canvieu el que cregueu oportú!
 
 ## Enllaços als outputs
+# Season 3
 [Last standings table](results/standings.md)
 
 [Stats graph over matchdays](results/winplayed_stats.png)
 
 [Team stats graph](results/frequencies.png)
+
+# Season 2
+[Last standings table](results/Season 2/standings.md)
+
+[Stats graph over matchdays](results/Season 2/winplayed_stats.png)
+
+[Team stats graph](results/Season 2/frequencies.png)
 
 ## Sistema ELO
 El sistema ELO és l'emprat per classificar el nivell de cada jugador. ## ELO rating
