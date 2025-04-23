@@ -4,10 +4,11 @@ import numpy as np
 
 # Your sheet's info
 sheet_id = "1pN_5Ulttdi5cmj1nlE_vzwZG4n8n_prxm6blmtu5L2U"  # replace with your actual Sheet ID
-gid = "1546699619"  # default is usually 0; change if needed for other tabs
+gid = "1943224824"  # default is usually 0; change if needed for other tabs
+# gid = "1546699619" # Season 2
 
 # Download URL
-csv_url = "https://docs.google.com/spreadsheets/d/1pN_5Ulttdi5cmj1nlE_vzwZG4n8n_prxm6blmtu5L2U/export?format=csv&gid=1546699619"
+csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
 
 # Save as CSV
 response = requests.get(csv_url)
