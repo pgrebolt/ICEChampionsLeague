@@ -1,90 +1,90 @@
 |    | Player   |   WinPlayed |
 |---:|:---------|------------:|
 |  1 | Víctor   |        0.8  |
-|  2 | Pau      |        0.69 |
-|  3 | Antía    |        0.68 |
-|  4 | Simone   |        0.67 |
-|  5 | Rebeca   |        0.64 |
-|  6 | Pedro    |        0.59 |
-|  7 | Luis     |        0.48 |
-|  8 | Dani     |        0.48 |
-|  9 | Gisela   |        0.33 |
-| 10 | Maider   |        0.3  |
-| 11 | Pablo    |        0.25 |
-| 12 | Marie    |        0.25 |
-| 13 | Andrés   |        0.25 |
-| 14 | Guille   |        0.21 |
+|  2 | Antía    |        0.68 |
+|  3 | Rebeca   |        0.64 |
+|  4 | Pau      |        0.63 |
+|  5 | Simone   |        0.62 |
+|  6 | Pedro    |        0.62 |
+|  7 | Luis     |        0.5  |
+|  8 | Dani     |        0.44 |
+|  9 | Maider   |        0.39 |
+| 10 | Marie    |        0.33 |
+| 11 | Guille   |        0.33 |
+| 12 | Gisela   |        0.33 |
+| 13 | Pablo    |        0.25 |
+| 14 | Andrés   |        0.25 |
 | 15 | Elena    |        0.06 |
 
 |    | Player   |   ScoredPlayed |
 |---:|:---------|---------------:|
 |  1 | Víctor   |           2    |
-|  2 | Pau      |           1.31 |
-|  3 | Dani     |           1.06 |
-|  4 | Guille   |           1.05 |
-|  5 | Maider   |           1    |
-|  6 | Gisela   |           1    |
-|  7 | Andrés   |           1    |
+|  2 | Pau      |           1.37 |
+|  3 | Dani     |           1.08 |
+|  4 | Guille   |           1.08 |
+|  5 | Simone   |           1    |
+|  6 | Andrés   |           1    |
+|  7 | Luis     |           0.96 |
 |  8 | Antía    |           0.95 |
-|  9 | Luis     |           0.91 |
+|  9 | Maider   |           0.94 |
 | 10 | Pablo    |           0.88 |
-| 11 | Simone   |           0.83 |
-| 12 | Pedro    |           0.74 |
-| 13 | Elena    |           0.56 |
-| 14 | Rebeca   |           0.55 |
-| 15 | Marie    |           0    |
+| 11 | Pedro    |           0.76 |
+| 12 | Elena    |           0.56 |
+| 13 | Rebeca   |           0.55 |
+| 14 | Gisela   |           0.5  |
+| 15 | Marie    |           0.22 |
 
 |    | Player   |   ELOAttack |
 |---:|:---------|------------:|
-|  1 | Pau      |     1100.54 |
-|  2 | Luis     |     1039.28 |
+|  1 | Pau      |     1108.7  |
+|  2 | Luis     |     1064.77 |
 |  3 | Víctor   |     1033.94 |
-|  4 | Simone   |     1011.58 |
+|  4 | Simone   |     1011.21 |
 |  5 | Antía    |     1006.02 |
 |  6 | Pedro    |     1000    |
 |  7 | Guille   |     1000    |
 |  8 | Rebeca   |      998.74 |
 |  9 | Andrés   |      996.81 |
-| 10 | Gisela   |      996.39 |
-| 11 | Dani     |      992.99 |
-| 12 | Maider   |      992.65 |
-| 13 | Marie    |      980.84 |
-| 14 | Pablo    |      973.6  |
+| 10 | Gisela   |      987.88 |
+| 11 | Maider   |      986.08 |
+| 12 | Dani     |      983.34 |
+| 13 | Pablo    |      973.6  |
+| 14 | Marie    |      969.03 |
 | 15 | Elena    |      916.63 |
 
 |    | Player   |   ELODefense |
 |---:|:---------|-------------:|
 |  1 | Antía    |      1048.42 |
-|  2 | Víctor   |      1022.47 |
-|  3 | Pedro    |      1020.95 |
-|  4 | Rebeca   |      1007.67 |
-|  5 | Pau      |      1004.02 |
-|  6 | Dani     |      1000.16 |
-|  7 | Marie    |      1000    |
-|  8 | Gisela   |      1000    |
-|  9 | Elena    |      1000    |
-| 10 | Pablo    |       998.77 |
-| 11 | Simone   |       993.65 |
-| 12 | Andrés   |       993.28 |
-| 13 | Maider   |       980.47 |
-| 14 | Luis     |       955.11 |
-| 15 | Guille   |       935.02 |
+|  2 | Pedro    |      1038.05 |
+|  3 | Víctor   |      1022.47 |
+|  4 | Pau      |      1008.7  |
+|  5 | Rebeca   |      1007.67 |
+|  6 | Marie    |      1000    |
+|  7 | Gisela   |      1000    |
+|  8 | Elena    |      1000    |
+|  9 | Pablo    |       998.77 |
+| 10 | Simone   |       993.65 |
+| 11 | Andrés   |       993.28 |
+| 12 | Dani     |       984.29 |
+| 13 | Maider   |       973.33 |
+| 14 | Guille   |       960.22 |
+| 15 | Luis     |       934.43 |
 
 |    | Player   |   WeightedELO |
 |---:|:---------|--------------:|
-|  1 | Pau      |       1056.3  |
+|  1 | Pau      |       1064.25 |
 |  2 | Antía    |       1044.57 |
-|  3 | Víctor   |       1028.2  |
-|  4 | Luis     |       1024.25 |
-|  5 | Pedro    |       1020.95 |
-|  6 | Simone   |       1005.61 |
+|  3 | Luis     |       1039.42 |
+|  4 | Pedro    |       1038.05 |
+|  5 | Víctor   |       1028.2  |
+|  6 | Simone   |       1006.82 |
 |  7 | Rebeca   |       1004.42 |
-|  8 | Gisela   |        996.39 |
-|  9 | Dani     |        995.98 |
-| 10 | Andrés   |        995.93 |
-| 11 | Pablo    |        986.18 |
-| 12 | Maider   |        981.68 |
-| 13 | Marie    |        980.84 |
-| 14 | Guille   |        935.02 |
+|  8 | Andrés   |        995.93 |
+|  9 | Gisela   |        987.88 |
+| 10 | Pablo    |        986.18 |
+| 11 | Dani     |        983.77 |
+| 12 | Maider   |        974.74 |
+| 13 | Marie    |        969.03 |
+| 14 | Guille   |        960.22 |
 | 15 | Elena    |        916.63 |
 
