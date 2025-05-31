@@ -7,16 +7,18 @@ Canvieu el que cregueu oportú!
 # Season 3
 [Last standings table](results/standings.md)
 
-[Stats graph over matchdays](results/winplayed_stats.png)
+[ELO plot over matchdays](results/ELO_stats.png)
 
-[Team stats graph](results/frequencies.png)
+[Stats plot over matchdays](results/winplayed_stats.png)
+
+[Team stats plot](results/frequencies.png)
 
 # Season 2
 [Last standings table](results/Season2/standings.md)
 
-[Stats graph over matchdays](results/Season2/winplayed_stats.png)
+[Stats plot over matchdays](results/Season2/winplayed_stats.png)
 
-[Team stats graph](results/Season2/frequencies.png)
+[Team stats plot](results/Season2/frequencies.png)
 
 ## Sistema ELO
 El sistema ELO és l'emprat per classificar el nivell de cada jugador. ## ELO rating
