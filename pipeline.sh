@@ -8,3 +8,4 @@ jupyter nbconvert --to notebook --execute --inplace create_standings.ipynb
 jupyter nbconvert --to notebook --execute --inplace plot_stats.ipynb
 jupyter nbconvert --to notebook --execute --inplace plot_frequencies.ipynb
 
+read -p "Press Enter to exit.."
