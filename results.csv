@@ -164,3 +164,16 @@ D,Jugador 1,Jugador 2,Jugador 3,Jugador 4,Gols 1,Gols 2,Gols 3,Gols 4,Local,Visi
 27,Jose,Luis,Pedro,Dani,1,2,1,0,3,1,Local
 27,Jose,Luis,Pedro,Dani,0,3,0,1,3,1,Local
 27,Jose,Luis,Pedro,Dani,1,2,1,1,3,2,Local
+28,Dani,Luis,Rebeca,Pau,1,2,0,0,3,0,Local
+28,Dani,Luis,Rebeca,Pau,0,3,1,0,3,1,Local
+28,Dani,Luis,Pau,Rebeca,2,0,3,0,2,3,Visitant
+28,Pau,Luis,Rebeca,Dani,1,2,0,1,3,1,Local
+28,Pau,Dani,Rebeca,Luis,0,3,0,0,3,0,Local
+29,Víctor,Tiziano,Guille,Dani,2,1,1,1,3,2,Local
+29,Víctor,Tiziano,Maider,Luis,1,2,0,0,3,0,Local
+29,Víctor,Tiziano,Pau,Gisela,3,0,1,0,3,1,Local
+29,Víctor,Tiziano,Guille,Luis,3,0,0,0,3,0,Local
+29,Víctor,Tiziano,Maider,Dani,0,3,0,2,3,2,Local
+29,Víctor,Tiziano,Guille,Pau,1,0,1,2,1,3,Visitant
+29,Dani,Luis,Guille,Pau,2,1,1,1,3,2,Local
+29,Dani,Luis,Guille,Pau,2,0,2,1,2,3,Visitant
