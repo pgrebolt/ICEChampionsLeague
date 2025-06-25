@@ -4,16 +4,16 @@
 |  2 | Tiziano   |        0.83 |
 |  3 | Antía     |        0.74 |
 |  4 | Víctor    |        0.7  |
-|  5 | Pau       |        0.65 |
+|  5 | Pau       |        0.64 |
 |  6 | Jose      |        0.6  |
 |  7 | Simone    |        0.6  |
 |  8 | Luis      |        0.54 |
 |  9 | Dani      |        0.52 |
 | 10 | Pedro     |        0.5  |
 | 11 | Convidat  |        0.5  |
-| 12 | Maider    |        0.41 |
-| 13 | Rebeca    |        0.32 |
-| 14 | Guille    |        0.32 |
+| 12 | Maider    |        0.42 |
+| 13 | Guille    |        0.33 |
+| 14 | Rebeca    |        0.31 |
 | 15 | Gisela    |        0.29 |
 | 16 | Pablo     |        0.25 |
 | 17 | Andrés    |        0.25 |
@@ -26,26 +26,26 @@
 |  2 | Víctor    |           1.56 |
 |  3 | Dani      |           1.27 |
 |  4 | Pau       |           1.23 |
-|  5 | Luis      |           1.06 |
+|  5 | Luis      |           1.08 |
 |  6 | Antía     |           1.04 |
 |  7 | Tiziano   |           1    |
 |  8 | Andrés    |           1    |
 |  9 | Simone    |           0.9  |
-| 10 | Guille    |           0.89 |
+| 10 | Guille    |           0.88 |
 | 11 | Pablo     |           0.88 |
-| 12 | Maider    |           0.76 |
-| 13 | Pedro     |           0.74 |
-| 14 | Elena     |           0.74 |
+| 12 | Pedro     |           0.74 |
+| 13 | Elena     |           0.74 |
+| 14 | Maider    |           0.7  |
 | 15 | Jose      |           0.7  |
-| 16 | Rebeca    |           0.59 |
+| 16 | Rebeca    |           0.63 |
 | 17 | Gisela    |           0.36 |
 | 18 | Marie     |           0.14 |
 | 19 | Convidat  |           0    |
 
 |    | Player    |   ELOAttack |
 |---:|:----------|------------:|
-|  1 | Pau       |     1125.01 |
-|  2 | Luis      |     1077.8  |
+|  1 | Pau       |     1130.35 |
+|  2 | Luis      |     1084.52 |
 |  3 | Dani      |     1075.46 |
 |  4 | Víctor    |     1074.98 |
 |  5 | Tiziano   |     1019.65 |
@@ -82,17 +82,17 @@
 | 14 | Pedro     |       974.65 |
 | 15 | Luis      |       966.51 |
 | 16 | Marie     |       955.53 |
-| 17 | Maider    |       945.45 |
-| 18 | Rebeca    |       927.45 |
-| 19 | Guille    |       888.05 |
+| 17 | Maider    |       934.52 |
+| 18 | Rebeca    |       919.75 |
+| 19 | Guille    |       894.61 |
 
 |    | Player    |   WeightedELO |
 |---:|:----------|--------------:|
-|  1 | Pau       |       1110.32 |
+|  1 | Pau       |       1113.7  |
 |  2 | Víctor    |       1079.6  |
 |  3 | Antía     |       1065.55 |
 |  4 | Dani      |       1060.13 |
-|  5 | Luis      |       1051.33 |
+|  5 | Luis      |       1057.12 |
 |  6 | Tiziano   |       1019.65 |
 |  7 | Alejandro |       1008.08 |
 |  8 | Simone    |       1003.62 |
@@ -102,9 +102,9 @@
 | 12 | Pablo     |        986.18 |
 | 13 | Pedro     |        975.01 |
 | 14 | Gisela    |        974.41 |
-| 15 | Maider    |        947.73 |
-| 16 | Rebeca    |        941.29 |
+| 15 | Maider    |        937.5  |
+| 16 | Rebeca    |        936.06 |
 | 17 | Marie     |        923.89 |
 | 18 | Elena     |        908.13 |
-| 19 | Guille    |        897.35 |
+| 19 | Guille    |        902.93 |
 
