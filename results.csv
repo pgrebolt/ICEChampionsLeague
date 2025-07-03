@@ -239,3 +239,6 @@ D,Jugador 1,Jugador 2,Jugador 3,Jugador 4,Gols 1,Gols 2,Gols 3,Gols 4,Local,Visi
 39,Maider,Pau,Guille,Víctor,0,3,0,0,3,0,Local
 39,Maider,Pau,Guille,Víctor,0,0,0,3,0,3,Visitant
 39,Antía,Pau,Guille,Víctor,0,2,1,2,2,3,Visitant
+40,Maider,Antía,Pau,Dani,0,0,0,3,0,3,Visitant
+40,Antía,Dani,Maider,Pau,0,2,1,2,2,3,Visitant
+40,Antía,0,Maider,Pau,0,0,0,3,0,3,Visitant
