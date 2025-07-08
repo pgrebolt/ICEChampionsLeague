@@ -11,7 +11,7 @@ git add results.csv
 git add results/frequencies.png
 git add results/standings.md
 git add results/winplayed_stats.html
-git add results/winplayed_stats.html
+git add results/winplayed_stats.png
 git add stats.nc
 git add teammates.nc
 
@@ -22,6 +22,6 @@ matchday="${last_line:0:2}"
 echo "Last matchday number is $matchday"
 
 # Commit changes to git
-git commit -m "'Updated to Matchday $matchday"
+git commit -m "Updated to Matchday $matchday"
 
 read -p "Press Enter to exit.."
