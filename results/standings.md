@@ -6,10 +6,10 @@
 |  4 | Víctor    |        0.62 |
 |  5 | Simone    |        0.6  |
 |  6 | Antía     |        0.55 |
-|  7 | Dani      |        0.53 |
+|  7 | Dani      |        0.52 |
 |  8 | Luis      |        0.51 |
-|  9 | Jose      |        0.5  |
-| 10 | Gibral    |        0.5  |
+|  9 | Gibral    |        0.5  |
+| 10 | Jose      |        0.5  |
 | 11 | Convidat  |        0.5  |
 | 12 | Pedro     |        0.49 |
 | 13 | Maider    |        0.48 |
@@ -21,16 +21,15 @@
 | 19 | Andrés    |        0.25 |
 | 20 | Elena     |        0.23 |
 | 21 | Marie     |        0.19 |
-| 22 | Dani      |        0    |
 
 |    | Player    |   ScoredPlayed |
 |---:|:----------|---------------:|
 |  1 | Víctor    |           1.34 |
-|  2 | Dani      |           1.33 |
+|  2 | Dani      |           1.32 |
 |  3 | Pau       |           1.24 |
 |  4 | Luis      |           1.1  |
-|  5 | Andrés    |           1    |
-|  6 | Tiziano   |           1    |
+|  5 | Tiziano   |           1    |
+|  6 | Andrés    |           1    |
 |  7 | Alejandro |           0.9  |
 |  8 | Simone    |           0.9  |
 |  9 | Pablo     |           0.89 |
@@ -45,42 +44,40 @@
 | 18 | Gibral    |           0.25 |
 | 19 | Marie     |           0.12 |
 | 20 | Ramon     |           0    |
-| 21 | Dani      |           0    |
-| 22 | Convidat  |           0    |
+| 21 | Convidat  |           0    |
 
 |    | Player    |   ELOAttack |
 |---:|:----------|------------:|
-|  1 | Pau       |     1162.93 |
-|  2 | Víctor    |     1139.82 |
-|  3 | Dani      |     1133.56 |
-|  4 | Luis      |     1061.16 |
+|  1 | Pau       |     1162.7  |
+|  2 | Víctor    |     1140.19 |
+|  3 | Dani      |     1133.57 |
+|  4 | Luis      |     1060.99 |
 |  5 | Tiziano   |     1019.65 |
 |  6 | Simone    |     1011.28 |
 |  7 | Alejandro |     1008.37 |
 |  8 | Gibral    |     1006.16 |
 |  9 | Convidat  |     1000    |
-| 10 | Dani      |     1000    |
-| 11 | Jose      |      998.47 |
-| 12 | Andrés    |      996.81 |
-| 13 | Guille    |      995.58 |
-| 14 | Pedro     |      995.3  |
-| 15 | Ramon     |      993.14 |
-| 16 | Gisela    |      973.36 |
-| 17 | Maider    |      971.68 |
-| 18 | Antía     |      969.34 |
-| 19 | Pablo     |      966.77 |
-| 20 | Rebeca    |      955.44 |
-| 21 | Marie     |      902.59 |
-| 22 | Elena     |      899.75 |
+| 10 | Jose      |      998.47 |
+| 11 | Andrés    |      996.81 |
+| 12 | Guille    |      995.58 |
+| 13 | Pedro     |      995.3  |
+| 14 | Ramon     |      993.14 |
+| 15 | Gisela    |      973.36 |
+| 16 | Maider    |      971.68 |
+| 17 | Antía     |      969.3  |
+| 18 | Pablo     |      966.77 |
+| 19 | Rebeca    |      955.44 |
+| 20 | Marie     |      902.59 |
+| 21 | Elena     |      899.75 |
 
 |    | Player    |   ELODefense |
 |---:|:----------|-------------:|
-|  1 | Víctor    |      1088.5  |
-|  2 | Pau       |      1073.54 |
-|  3 | Antía     |      1043.62 |
-|  4 | Dani      |      1032.07 |
+|  1 | Víctor    |      1088.33 |
+|  2 | Pau       |      1073.55 |
+|  3 | Antía     |      1043.35 |
+|  4 | Dani      |      1023.34 |
 |  5 | Alejandro |      1010.91 |
-|  6 | Pablo     |      1001.28 |
+|  6 | Pablo     |      1001.19 |
 |  7 | Tiziano   |      1000    |
 |  8 | Ramon     |       996.52 |
 |  9 | Convidat  |       994.58 |
@@ -88,38 +85,36 @@
 | 11 | Gibral    |       993.12 |
 | 12 | Elena     |       992.81 |
 | 13 | Simone    |       992.12 |
-| 14 | Dani      |       989.9  |
-| 15 | Gisela    |       987.97 |
-| 16 | Jose      |       986.6  |
-| 17 | Maider    |       969.14 |
-| 18 | Pedro     |       962.91 |
-| 19 | Luis      |       950.09 |
-| 20 | Marie     |       947.36 |
-| 21 | Guille    |       928.41 |
-| 22 | Rebeca    |       904.12 |
+| 14 | Gisela    |       987.97 |
+| 15 | Jose      |       986.6  |
+| 16 | Maider    |       969.14 |
+| 17 | Pedro     |       962.19 |
+| 18 | Luis      |       950.09 |
+| 19 | Marie     |       947.37 |
+| 20 | Guille    |       928.33 |
+| 21 | Rebeca    |       904.12 |
 
 |    | Player    |   WeightedELO |
 |---:|:----------|--------------:|
 |  1 | Pau       |          0.95 |
 |  2 | Víctor    |          0.92 |
-|  3 | Dani      |          0.81 |
+|  3 | Dani      |          0.79 |
 |  4 | Antía     |          0.64 |
 |  5 | Alejandro |          0.55 |
 |  6 | Luis      |          0.55 |
 |  7 | Convidat  |          0.49 |
-|  8 | Dani      |          0.47 |
-|  9 | Tiziano   |          0.46 |
+|  8 | Tiziano   |          0.46 |
+|  9 | Ramon     |          0.45 |
 | 10 | Pablo     |          0.45 |
-| 11 | Ramon     |          0.45 |
-| 12 | Simone    |          0.45 |
-| 13 | Jose      |          0.44 |
-| 14 | Gibral    |          0.42 |
-| 15 | Andrés    |          0.4  |
-| 16 | Maider    |          0.37 |
-| 17 | Pedro     |          0.35 |
-| 18 | Gisela    |          0.29 |
-| 19 | Guille    |          0.21 |
-| 20 | Rebeca    |          0.12 |
-| 21 | Marie     |          0.06 |
-| 22 | Elena     |          0.02 |
+| 11 | Simone    |          0.45 |
+| 12 | Jose      |          0.44 |
+| 13 | Gibral    |          0.43 |
+| 14 | Andrés    |          0.4  |
+| 15 | Maider    |          0.37 |
+| 16 | Pedro     |          0.34 |
+| 17 | Gisela    |          0.29 |
+| 18 | Guille    |          0.21 |
+| 19 | Rebeca    |          0.12 |
+| 20 | Marie     |          0.06 |
+| 21 | Elena     |          0.02 |
 
