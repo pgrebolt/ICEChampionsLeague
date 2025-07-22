@@ -5,8 +5,8 @@
 |  3 | Víctor    |        0.62 |
 |  4 | Pau       |        0.62 |
 |  5 | Simone    |        0.6  |
-|  6 | Antía     |        0.52 |
-|  7 | Luis      |        0.52 |
+|  6 | Luis      |        0.52 |
+|  7 | Antía     |        0.52 |
 |  8 | Dani      |        0.51 |
 |  9 | Gibral    |        0.5  |
 | 10 | Convidat  |        0.5  |
@@ -18,8 +18,8 @@
 | 16 | Ramon     |        0.33 |
 | 17 | Rebeca    |        0.33 |
 | 18 | Gisela    |        0.29 |
-| 19 | Andrés    |        0.25 |
-| 20 | Elena     |        0.23 |
+| 19 | Elena     |        0.26 |
+| 20 | Andrés    |        0.25 |
 | 21 | Marie     |        0.19 |
 
 |    | Player    |   ScoredPlayed |
@@ -27,18 +27,18 @@
 |  1 | Dani      |           1.34 |
 |  2 | Víctor    |           1.34 |
 |  3 | Pau       |           1.24 |
-|  4 | Luis      |           1.1  |
+|  4 | Luis      |           1.11 |
 |  5 | Tiziano   |           1    |
 |  6 | Andrés    |           1    |
-|  7 | Antía     |           0.9  |
+|  7 | Antía     |           0.95 |
 |  8 | Simone    |           0.9  |
 |  9 | Alejandro |           0.9  |
 | 10 | Pablo     |           0.89 |
 | 11 | Guille    |           0.83 |
-| 12 | Elena     |           0.77 |
+| 12 | Elena     |           0.76 |
 | 13 | Pedro     |           0.74 |
 | 14 | Maider    |           0.63 |
-| 15 | Rebeca    |           0.63 |
+| 15 | Rebeca    |           0.59 |
 | 16 | Jose      |           0.58 |
 | 17 | Gisela    |           0.36 |
 | 18 | Gibral    |           0.25 |
@@ -64,11 +64,11 @@
 | 14 | Guille    |      985.02 |
 | 15 | Gisela    |      973.36 |
 | 16 | Maider    |      971.68 |
-| 17 | Antía     |      968.64 |
-| 18 | Pablo     |      966.77 |
+| 17 | Pablo     |      966.77 |
+| 18 | Antía     |      965.11 |
 | 19 | Rebeca    |      955.44 |
-| 20 | Marie     |      902.59 |
-| 21 | Elena     |      899.75 |
+| 20 | Elena     |      904.86 |
+| 21 | Marie     |      902.59 |
 
 |    | Player    |   ELODefense |
 |---:|:----------|-------------:|
@@ -88,20 +88,20 @@
 | 14 | Gisela    |       987.97 |
 | 15 | Jose      |       986.6  |
 | 16 | Pedro     |       975.92 |
-| 17 | Luis      |       959.74 |
+| 17 | Luis      |       969.48 |
 | 18 | Maider    |       954.31 |
 | 19 | Guille    |       953.87 |
 | 20 | Marie     |       947.37 |
-| 21 | Rebeca    |       904.12 |
+| 21 | Rebeca    |       892.8  |
 
 |    | Player    |   WeightedELO |
 |---:|:----------|--------------:|
 |  1 | Víctor    |          0.87 |
 |  2 | Pau       |          0.86 |
 |  3 | Dani      |          0.68 |
-|  4 | Luis      |          0.56 |
-|  5 | Antía     |          0.55 |
-|  6 | Alejandro |          0.55 |
+|  4 | Luis      |          0.57 |
+|  5 | Alejandro |          0.55 |
+|  6 | Antía     |          0.54 |
 |  7 | Convidat  |          0.49 |
 |  8 | Pablo     |          0.45 |
 |  9 | Ramon     |          0.44 |
@@ -114,7 +114,7 @@
 | 16 | Maider    |          0.3  |
 | 17 | Guille    |          0.3  |
 | 18 | Gisela    |          0.26 |
-| 19 | Rebeca    |          0.11 |
+| 19 | Rebeca    |          0.07 |
 | 20 | Marie     |          0.06 |
-| 21 | Elena     |          0.02 |
+| 21 | Elena     |          0.04 |
 
