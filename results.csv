@@ -329,3 +329,9 @@ D,Jugador 1,Jugador 2,Jugador 3,Jugador 4,Gols 1,Gols 2,Gols 3,Gols 4,Local,Visi
 52,Pau,Luis,Guille,Víctor,2,0,2,1,2,3,Visitant
 52,Pau,Luis,Guille,Dani,0,3,0,0,3,0,Local
 52,Pau,Luis,Guille,Dani,0,1,0,3,1,3,Visitant
+53,Luis,Alejandro,Dani,Marie,2,0,3,0,2,3,Visitant
+53,Alejandro,Pau,Dani,Marie,2,1,2,0,3,2,Local
+53,Alejandro,Pau,Luis,Marie,0,3,0,0,3,0,Local
+53,Alejandro,Pau,Dani,Luis,0,2,1,2,2,3,Visitant
+53,Alejandro,Pau,Dani,Luis,1,1,0,2,3,2,Local
+53,Alejandro,Pau,Dani,Luis,1,1,1,2,2,3,Visitant
