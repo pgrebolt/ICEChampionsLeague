@@ -4,7 +4,8 @@ import numpy as np
 
 # Your sheet's info
 sheet_id = "1pN_5Ulttdi5cmj1nlE_vzwZG4n8n_prxm6blmtu5L2U"  # replace with your actual Sheet ID
-gid = "1943224824"  # default is usually 0; change if needed for other tabs
+gid = "145438050"
+# gid = "1943224824"  # default is usually 0; change if needed for other tabs
 # gid = "1546699619" # Season 2
 
 # Download URL
