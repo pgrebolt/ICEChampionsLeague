@@ -1,10 +1,10 @@
 # ICE Champions League
-Aquest repositori inclou tots els codis per recopilar i analitzar els resultats de la ICE Champions League. La millor manera d'executar el programa és descarregar el repositori i aleshores executar el fitxer `pipeline.sh` perquè es descarreguin les dades del Google Sheets i els facin tots els plots.
-
-Canvieu el que cregueu oportú!
+Aquest repositori inclou tots els codis per recopilar i analitzar els resultats de la ICE Champions League.
+La millor manera d'executar el programa és descarregar el repositori amb `git clone` i aleshores executar el fitxer `pipeline.sh` perquè es descarreguin les dades del Google Sheets i els facin tots els plots.
+Per si és necessari, s'inclou el fitxer `requirements.txt` amb els paquets necessaris.
 
 ## Enllaços als outputs
-# Season 3
+# Season 4
 [Last standings table](results/standings.md)
 
 [ELO plot over matchdays](results/ELO_stats.png)
@@ -12,6 +12,15 @@ Canvieu el que cregueu oportú!
 [Stats plot over matchdays](results/winplayed_stats.png)
 
 [Team stats plot](results/frequencies.png)
+
+# Season 3
+[Last standings table](results/Season3/standings.md)
+
+[ELO plot over matchdays](results/Season3/ELO_stats.png)
+
+[Stats plot over matchdays](results/Season3/winplayed_stats.png)
+
+[Team stats plot](results/Season3/frequencies.png)
 
 # Season 2
 [Last standings table](results/Season2/standings.md)
