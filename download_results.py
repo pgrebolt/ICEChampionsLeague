@@ -18,8 +18,10 @@ with open("results.csv", "wb") as f:
 
 print("CSV downloaded successfully!")
 
+columns = ['D', 'Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4', 'Gols 1', 'Gols 2', 'Gols 3', 'Gols 4', 'Local', 'Visitant', 'Guanyador']
+
 # Read the CSV file and remove unnecessary rows
-df = pd.read_csv("results.csv")
+df = pd.read_csv("results.csv", usecols=columns)
 df = df.dropna(subset=[df.columns[1]]) # treiem les files innecessàries
 
 # Passem els floats a int (les columnes numèriques)
