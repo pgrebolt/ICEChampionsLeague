@@ -175,7 +175,7 @@ D,Jugador 1,Jugador 2,Jugador 3,Jugador 4,Gols 1,Gols 2,Gols 3,Gols 4,Local,Visi
 26,Víctor,Guille,Antía,Dani,2,1,1,1,3,2,Local
 26,Víctor,Guille,Luis,Marie,1,2,1,0,3,1,Local
 26,Víctor,Guille,Pedro,Pau,2,1,0,1,3,1,Local
-26,Víctor,Guille,Antía,Dani,1,0,1,3,1,4,Visitant
+26,Víctor,Guille,Antía,Dani,1,0,1,2,1,3,Visitant
 26,Pau,Luis,Antía,Dani,0,2,0,3,2,3,Visitant
 26,Pedro,Guille,Antía,Dani,0,1,2,1,1,3,Visitant
 26,Luis,Pau,Antía,Dani,0,1,1,2,1,3,Visitant
@@ -352,3 +352,7 @@ D,Jugador 1,Jugador 2,Jugador 3,Jugador 4,Gols 1,Gols 2,Gols 3,Gols 4,Local,Visi
 48,Guille,Luis,Dani,Pau,1,0,0,3,1,3,Visitant
 48,Guille,Pau,Dani,Luis,0,3,0,1,3,1,Local
 48,Guille,Pau,Dani,Luis,0,3,1,0,3,1,Local
+49,Antía,Luis,Dani,Pau,0,3,0,1,3,1,Local
+49,Antía,Luis,Pau,Dani,1,0,2,1,1,3,Visitant
+49,Antía,Dani,Pau,Luis,2,1,0,0,3,0,Local
+49,Antía,Dani,Pau,Luis,1,0,2,1,1,3,Visitant
