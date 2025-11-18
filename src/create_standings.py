@@ -3,56 +3,26 @@
 
 # Aquest codi llegeix els fitxers amb les dades de les estadístiques dels jugadors i en treu les classificacions. Les classificacions les desa en un fitxer markdown.
 
-# In[1]:
-
-
 import asyncio
 import sys
 
 if sys.platform.startswith('win'):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
-
-# In[2]:
-
-
 #!pip install numpy==1.25.2
 #!pip uninstall xarray scipy netCDF4
 #!pip install xarray scipy netCDF4
 #!pip install pybin11 --upgrade
-
-
-# In[3]:
-
 
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 import pandas as pd
 
-
-# In[4]:
-
-
 # Definim tab20 com la paleta per defecte dels plots
 plt.rcParams['axes.prop_cycle'] = plt.cycler(color=plt.cm.tab20.colors)
 
-
-# In[5]:
-
-
 # Llegim les dades
-dataarray = xr.open_dataset('stats.nc', engine='scipy')
-dataarray
-
-
-# In[6]:
-
-
-dataarray['WeightedELO']
-
-
-# In[7]:
+dataarray = xr.open_dataset('../generated_files/stats.nc', engine='scipy')
 
 
 # Create a dataaray with the coordinates of the dimension to remove ('player')
@@ -63,27 +33,15 @@ mask = xr.DataArray(last_games_played > minimum_games, dims = 'player', coords =
 # Filter out players
 dataarray = dataarray.where(mask, drop=True)
 
-
-# In[8]:
-
-
 # Extreiem els noms dels jugadors i les jornades
 players_names = dataarray['player'].astype(str).values # noms dels jugadors
 matchdays = dataarray['matchday'] # array de números de jornades
 
-
-# In[9]:
-
-
 # Paràmetres que volem posar a la taula, per ordre d'aparició
 parameters = ['WinPlayed', 'ScoredPlayed', 'ELOAttack', 'ELODefense', 'WeightedELO']
 
-
-# In[10]:
-
-
 # Creem un fitxer on hi desarem les taules
-md_file = open('results/standings.md', 'w')
+md_file = open('../results/standings.md', 'w')
 
 # Escrivim cada classificació al fitxer
 for parameter in parameters:
@@ -109,4 +67,3 @@ for parameter in parameters:
     md_file.write('\n\n')
 
 md_file.close()
-

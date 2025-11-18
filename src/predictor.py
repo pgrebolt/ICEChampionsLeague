@@ -5,9 +5,6 @@
 # 
 # Si volem aprofitar el model per fer prediccions, li hem de passar els paràmetres amb els quals s'ha entrenat el model (dins de `X_train`). Per nosaltres és més fàcil escriure el nom dels jugadors que juguen. A partir d'aquí, crearem la llista de valors dels jugadors i en farem la predicció amb el model.
 
-# In[ ]:
-
-
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -21,43 +18,22 @@ from tensorflow.keras import layers, models
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 
-
-# In[ ]:
-
-
 # Llegim les estadístiques de cada jugador
-stats_xr = xr.open_dataset('stats.nc', engine='scipy')
-stats_xr
-
-
-# In[ ]:
-
+stats_xr = xr.open_dataset('../generated_files/stats.nc', engine='scipy')
 
 # Llegim l'scaler
-scaler = joblib.load('scaler.pkl')
-encoder_scores = joblib.load('encoder_scores.pkl')
-
-
-# In[ ]:
-
+scaler = joblib.load('../generated_files/scaler.pkl')
+encoder_scores = joblib.load('../generated_files/encoder_scores.pkl')
 
 # Paràmetres que considerem al model, en funció de si el jugador és atacant o defensor (COMPROVAR QUE ÉS EL MATEIX QUE A L'ALTRE NOTEBOOK)
-considered_stats_defense = ['GamesPlayed', 'WeigthedELO', 'PlayedDefense', 'WinPlayedDefense', 'ScoredDefensePlayed', 'ReceivedDefensePlayed', 'ELODefense', 'DefenseIndex']
-considered_stats_attack = ['GamesPlayed', 'WeigthedELO', 'PlayedAttack', 'WinPlayedAttack', 'ScoredAttackPlayed', 'ReceivedAttackPlayed', 'ELOAttack', 'AttackIndex']
-
-
-# In[ ]:
-
+considered_stats_defense = ['GamesPlayed', 'WeightedELO', 'PlayedDefense', 'WinPlayedDefense', 'ScoredDefensePlayed', 'ReceivedDefensePlayed', 'ELODefense', 'DefenseIndex']
+considered_stats_attack = ['GamesPlayed', 'WeightedELO', 'PlayedAttack', 'WinPlayedAttack', 'ScoredAttackPlayed', 'ReceivedAttackPlayed', 'ELOAttack', 'AttackIndex']
 
 # Si volem carregar el model
-model = keras.models.load_model('sequential.keras')
-
-
-# In[ ]:
-
+model = keras.models.load_model('../generated_files/sequential.keras')
 
 # Jugadors, per alineació
-player_list = ['Víctor', 'Elena', 'Guille', 'Luis']
+player_list = ['Víctor', 'Antía', 'Guille', 'Luis']
 
 # Creem la llista d'estadístiques per fer la predicció
 stats_match = []
@@ -81,4 +57,3 @@ score_prediction_output = score_prediction.argmax(axis = 1)
 score_prediction_output_label = encoder_scores.inverse_transform(score_prediction_output)
 
 print('Predicted result: ', score_prediction_output_label)
-

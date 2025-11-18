@@ -3,19 +3,12 @@
 
 # En aquest codi analitzarem els resultats de cada partida i escriurem les classificacions corresponents.
 
-# In[1]:
-
-
 # Per silenciar un warning vinculat amb el Jupyter Notebook
 import asyncio
 import sys
 
 if sys.platform.startswith('win'):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
-
-# In[2]:
-
 
 # Importem les llibreries
 import numpy as np
@@ -24,16 +17,8 @@ import pandas as pd
 import xarray as xr # per guardar les dades 3D
 from collections import Counter
 
-
-# In[3]:
-
-
 # Definim tab20 com la paleta per defecte dels plots
 plt.rcParams['axes.prop_cycle'] = plt.cycler(color=plt.cm.tab20.colors)
-
-
-# In[4]:
-
 
 # Definim una funció que afegeix un nou matchday al ataframe
 def join_matchdays(master_dataframe, dict_to_join):
@@ -47,25 +32,11 @@ def join_matchdays(master_dataframe, dict_to_join):
 
     return master_dataframe
 
-
-# In[5]:
-
-
 # Carreguem les dades
-data_df = pd.read_csv('results.csv')
+data_df = pd.read_csv('../generated_files/results.csv')
 
 # Emplenem els espais en blanc amb 0
 data_df = data_df.fillna(0.)
-
-
-# In[6]:
-
-
-data_df
-
-
-# In[7]:
-
 
 # Obtenim una llista amb tots els noms dels participants
 players_names = np.unique(data_df[['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4']].values.flatten())
@@ -73,20 +44,12 @@ players_names = np.unique(data_df[['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugad
 # Llista de dies jugats
 matchdays = pd.unique(data_df['D'])
 
-
-# In[8]:
-
-
 # Comptem quants partits ha jugat cada participant
 all_players = data_df['Jugador 1'].tolist() + data_df['Jugador 2'].tolist() + data_df['Jugador 3'].tolist() + data_df['Jugador 4'].tolist()
 
 games_count = dict(Counter(all_players))
 
-
 # ### Partits jugats i victòries
-
-# In[9]:
-
 
 # En aquest dataframe hi guardem les estadístiques finals després de cada jornada
 played_matchdays = pd.DataFrame(columns=players_names) # jugats total
@@ -167,49 +130,6 @@ for nmatchday in range(len(matchdays)):
     playeddefense_matchdays = join_matchdays(playeddefense_matchdays, playeddefense_counts)
     winattackplayed_matchdays = join_matchdays(winattackplayed_matchdays, winattackplayed_counts)
     windefenseplayed_matchdays = join_matchdays(windefenseplayed_matchdays, windefenseplayed_counts)
-# Convert to DataFrame for display
-#win_counts_df = pd.concat(pd:winDataFrame(list(win_counts.items()), columns=['Player', 'WinCount'])
-# played_matchdays
-#win_counts_df
-
-
-# ## ELO rating
-# 
-# El sistema ELO és un algoritme emprat en compteticions com els escacs per classificar els jugadors en funció del seu nivell. Si un jugador amb alt nivell guanya a un de baix nivell, la seva valoració no canviarà significativament. Ara bé, si és al revés, aleshores la puntuació del d'alt nivell baixarà notablement i la del de baix nivell pujarà bastant.
-# 
-# Sigui un jugador A amb puntuació $s_A$ i un jugador B amb puntuació $s_B$, aleshores la probabilitat que guanyi A en un enfrontament ve descrita, segons el model, com
-# 
-# $$P_A(s_A, s_B) = \frac{1}{1 + 10^{(s_B - s_A) /400}}$$
-# 
-# Si 1 denota victòria i 0 denota derrota, després d'un enfrontament entre A i B on A ha guanyat, les puntuacions s'actualitzen de la següent manera:
-# 
-# $$ s_A = s_A + K\cdot R_p \cdot (1 - P_A(s_A, s_B))$$
-# $$ s_B = s_B + K\cdot R'_p \cdot (0 - P_B(s_B, s_A))$$
-# 
-# on $K = 30$ és una constant i $R_p$ és una regularització/ponderació que té en compte el rendiment del jugador a la victòria..
-# 
-# Pel nostre cas, considerarem un ELO en posicions ofensives i un ELO en posicions defensives. Cada jugador comenaça la competició amb 1000 punts en cada posició, i s'anirà actualitzant en funció dels seus resultats a cada partits. Per calcular l'ELO del rival al càlcul, es calcula la mitjana ponderada d'ELOs del rival. La ponderació té en compte el nombre de partits que ha jugat l'atacant i el defensor en llurs posicions. A més, la ponderació $R_p$ dependrà de quants gols hagi anotat/rebut l'atacant/defensor i de si ha guanyat o perdut el partit. Per cada jugador, el rendiment es calcula com:
-# 
-# $$ R_{p,i} = \frac{r_i}{\sum_k r_k} $$
-# 
-# on $r_i$ és el rendiment particular de cada jugador i $\sum_k r_k$ representa el rendiment total de l'equip. Així, $R_{p,i}$ està normalitzat a 1. El valor $r_i$ depèn de si el jugador és atacant o defensor:
-# 
-# $$ r_i (\text{atacant}) =  \mu \cdot \left(\frac{\text{Gols anotats}}{3} \right) + \lambda \cdot \left( 1- \frac{\text{Gols rebuts}}{3} \right) $$
-# $$ r_i (\text{defensor}) = \mu \cdot \left( 1 - \frac{\text{Gols rebuts}}{3} \right) + \lambda \cdot \left( \frac{\text{Gols anotats}}{3} \right) $$
-# 
-# on $\mu = 0.7$ i $\lambda = 0.3$ són dos paràmetres arbitraris que ponderen l'activitat defensiva i ofensiva del defensor.
-# 
-# Ara bé, tal i com està escrit, si un defensor perd i no ha anotat cap gol tindrà $r_i = 0 \Longrightarrow R_i = 0$ i, per tant, no se li descomptaria cap punt! És per això que, en el cas que l'equip hagi perdut, el rendiment $r_i$ s'ha de recalcular per tal de penalitzar la derrota d'aquesta manera:
-# 
-# $$ r_i' = 1 - r_i$$
-# 
-# Així, el rendiment pel cas de la derrota es calcula com $R'_{p,i} = \frac{r'_i}{\sum_k r'_k}$.
-# 
-# Finalment, cal destacar que en cada càlcul de $r_i$ imposem un rendiment mínim de 0.1. Així, encara que un jugador obtingui una puntuació de $r_i = 0$, aquesta passarà a ser 0.1. Això evita conflictes quan es ponderi a l'hora de calcular $R_{p, i}$.
-# 
-
-# In[10]:
-
 
 # DataFrames on hi guardarem els valors ELO a cada jornada
 elo_attack_matchdays = pd.DataFrame(columns = players_names)
@@ -307,17 +227,7 @@ for nmatchday in range(len(matchdays)):
     elo_attack_matchdays = join_matchdays(elo_attack_matchdays, elo_rating_attack)
     elo_defense_matchdays = join_matchdays(elo_defense_matchdays, elo_rating_defense)        
 
-
-# In[11]:
-
-
-elo_defense_matchdays
-
-
 # ### Gols anotats
-
-# In[12]:
-
 
 # En aquest dataframe hi guardem les estadístiques finals després de cada jornada
 scored_matchdays = pd.DataFrame(columns=players_names) # gols anotats
@@ -390,11 +300,7 @@ for nmatchday in range(len(matchdays)):
     scoredattackplayed_matchdays = join_matchdays(scoredattackplayed_matchdays, scoredattackplayed_counts)
     scoreddefenseplayed_matchdays = join_matchdays(scoreddefenseplayed_matchdays, scoreddefenseplayed_counts)
 
-
 # ### Gols rebuts
-
-# In[13]:
-
 
 # En aquest dataframe hi guardem les estadístiques finals després de cada jornada
 received_matchdays = pd.DataFrame(columns=players_names) # gols rebuts
@@ -470,9 +376,6 @@ for nmatchday in range(len(matchdays)):
 
 # Desem les dades a un xarray. Aquest format permet emmagatzemar matrius 3D, cosa que pandas no ho permet. A la nostra matriu tindrem dimensions (Nom de jugador, Dia de partit, Paràmetre). Això ens permet accedir a l'element que deseitgem.
 
-# In[14]:
-
-
 # Creem una DataArray de xarray. Hi especifiquem els noms de cada dimensió
 winplayed_matchdays_da = xr.DataArray(winplayed_matchdays.values, dims = ('matchday', 'player'),
                                       coords = {'matchday': winplayed_matchdays.index, 'player': winplayed_matchdays.columns})
@@ -539,9 +442,6 @@ dataset = xr.Dataset({"GamesPlayed": played_matchdays_da,
 
 # TODO: el procés de crear el DataArray a partir del DataFrame es pot automatitzar amb una funció que faci un concat al dataframe. 
 
-# dataset['goals'] = goals_da # si volem afegir un nou element
-dataset
-
 
 # Afegim el càlcul dels índexs d'atac i de defensa en base al paràmetres que ja hem calculat:
 # 
@@ -549,17 +449,10 @@ dataset
 # 
 # També afegim el càlcul d'ELO total ponderat pel nombre de partits que ha jugat cada jugador a cada posició. Cal tenir en compte si el jugador no ha jugat cap partit. Utilitzem un nombre total de partits fals per fer el recompte. Per evitar divisions per 0, on hi havia un 0 al nombre de partits jugats hi posem un 1. El 0 de la divisió el farà el numerador.
 
-# In[15]:
-
-
 filtered_games_played = (dataset['GamesPlayed']).where(dataset['GamesPlayed'] != 0, 1)
 
 dataset['AttackIndex'] = dataset['ScoredAttack'] * dataset['PlayedAttack'] / filtered_games_played + dataset['ScoredDefense'] * dataset['PlayedDefense'] / filtered_games_played
 dataset['DefenseIndex'] = dataset['ReceivedAttack'] * dataset['PlayedAttack'] / filtered_games_played + dataset['ScoredDefense'] * dataset['PlayedDefense'] / filtered_games_played
-
-
-# In[16]:
-
 
 # Weighted ELO a partir del valors normalitzats min-max
 normalized_ELO_attack = (dataset['ELOAttack'] - dataset['ELOAttack'].min()) / (dataset['ELOAttack'].max() - dataset['ELOAttack'].min())
@@ -572,44 +465,8 @@ print(dataset['WeightedELO'].max(), dataset['WeightedELO'].min())
 dataset['WeightedELO'] = dataset['WeightedELO'].where(dataset['WeightedELO'] < 500)
 dataset['WeightedELO']
 
-
-# In[17]:
-
-
 print(dataset)
 
-
-# ## Variables per desar a xarray:
-# - Partits jugats
-# - Gols anotats
-# - Gols rebuts
-# - Gols anotats atacant
-# - Gols anotats defensor
-# - Gols anotats atacant local
-# - Gols anotats atacant visitant
-# - Gols anotats defensor local
-# - Gols anotats defensor visitant
-# - Gols rebuts atacant
-# - Gols rebuts defensor
-# - Gols rebuts atacant local
-# - Gols rebuts atacant visitant
-# - Gols rebuts defensor local
-# - Gols rebuts defensor visitant
-# - Un paràmetre d'atacant (que ponderi contra qui s'està jugant)
-# - Un paràmetre de defensa (que ponderi contra qui s'està defensant)
-# 
-# ## Una nova xarray
-# - Una nova xarray on s'inclogui la freqüència d'ocurrència de cada parella. La 3a dimensió seria cada jornada, i les dues dimensions principals serien els noms dels jugadors. És la matriu amb 0 a la diagonal que teníem abans.
-# - Igual que l'anterior, però amb freqüència de victòries.
-# 
-# ## Per pensar:
-# - Intentar trobar la manera de saber com es pot saber quina parella guanya més partits contra qui.
-
-# Desem el fitxer xarray en format netcdf4. Això ens permetrà obrir-lo amb un altre fitxer i fer-ne l'anàlisi que volguem.
-
-# In[18]:
-
-
-dataset.to_netcdf('stats.nc', mode='w')
+dataset.to_netcdf('../generated_files/stats.nc', mode='w')
 # ds = xr.open_dataset('stats.nc', engine ='netcdf4') # si volem obrir el fitxer
 

@@ -1,67 +1,32 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
-
 import asyncio
 import sys
 
 if sys.platform.startswith('win'):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-
-# In[2]:
-
-
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 import pandas as pd
 
-
-# In[3]:
-
-
 # Definim tab20 com la paleta per defecte dels plots
 plt.rcParams['axes.prop_cycle'] = plt.cycler(color=plt.cm.tab20.colors)
 
-
-# In[4]:
-
-
 # Llegim les dades
-dataarray = xr.open_dataset('stats.nc', engine='scipy')
-dataarray
-
-
-# In[5]:
-
+dataarray = xr.open_dataset('../generated_files/stats.nc', engine='scipy')
 
 # Extreiem els noms dels jugadors i les jornades
 players_names = dataarray['player'].astype(str).values # noms dels jugadors
-players_names.shape
-
 
 # A continuació definim quins paràmetres volem pintar i per quins jugadors. És recomanable no atapeir gaire el gràfic amb molts paràmetres o jugadors. El llistat de paràmetres amb els seus noms es pot consultar al desplegable `Data variables`, quan es mostra l'objecte `dataarray`.
-
-# In[6]:
-
 
 stats = ['WeightedELO', 'ELODefense', 'WinPlayedDefense', 'ReceivedDefensePlayed', 'ScoredDefensePlayed', 'WinPlayedAttack', 'ELOAttack']
 players = ['Dani', 'Luis', 'Antía', 'Pedro']
 
-
-# In[7]:
-
-
 normalizing_values = dataarray[stats].sel(player=players).isel(matchday = -1).max().as_numpy() # valors màxims per normalitzar el plot a 1
-
-
-# In[10]:
-
-
-### values = [4, 3, 2, 5, 4]
 
 #Values that will be reversed (the lowest value, the better)
 reversed_stats = [ 'ReceivedDefensePlayed']
@@ -106,12 +71,8 @@ for player in players:
     #ax.fill(angles, values, 'b', alpha=0.1)
 
 plt.legend(ncol = 6, bbox_to_anchor=(0.5, 1.1), loc = 'center')
-plt.savefig('results/radial_stats.png', dpi=300, bbox_inches='tight')
+plt.savefig('../results/radial_stats.png', dpi=300, bbox_inches='tight')
 plt.show()
-
-
-# In[9]:
-
 
 dataarray.close()
 

@@ -31,4 +31,4 @@ df[int_columns] = df[int_columns].astype(int) # convertim els floats a int
 df = df.replace(-999, 0) # canviem els -999 per 0
 
 # Guardem el csv un altre cop
-df.to_csv("results.csv", index=False, sep=',')
+df.to_csv("../generated_files/results.csv", index=False, sep=',')

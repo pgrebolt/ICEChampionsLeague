@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Add to git
-git add create_standings.ipynb
-git add create_stats.ipynb 
-git add create_teamfrequencies.ipynb
-git add plot_frequencies.ipynb
-git add plot_stats.ipynb
+git add src\create_standings.ipynb
+git add src\create_stats.ipynb 
+git add src\create_teamfrequencies.ipynb
+git add src\plot_frequencies.ipynb
+git add src\plot_stats.ipynb
 git add results/ELO_stats.png
 git add results.csv
 git add results/frequencies.png

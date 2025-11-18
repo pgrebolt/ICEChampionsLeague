@@ -5,47 +5,26 @@
 
 # Aquest codi pren les dades recopilades dels partits jugats i en fa un fitxer amb els rendiments per equips. Aquest fitxer és una `xarray` de dimensions `player` vs. `teammate`. És a dir, tenim informació de cada possible combinació d'equips.
 
-# In[1]:
-
-
 import asyncio
 import sys
 
 if sys.platform.startswith('win'):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-
-# In[2]:
-
-
 # Importem les llibreries
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 import xarray as xr # per guardar les dades 3D
-from collections import Counter
-
-
-# In[3]:
-
 
 # Carreguem les dades
-data_df = pd.read_csv('results.csv')
+data_df = pd.read_csv('../generated_files/results.csv')
 
 # Emplenem els espais en blanc amb 0
 data_df = data_df.fillna(0.)
 
-
-# In[4]:
-
-
 # Read the number of games played per each player
-dataarray = xr.open_dataset('stats.nc', engine='scipy')
+dataarray = xr.open_dataset('../generated_files/stats.nc', engine='scipy')
 played_games = dataarray['GamesPlayed'].isel(matchday=-1)
-
-
-# In[5]:
-
 
 # Obtenim una llista amb tots els noms dels participants
 players_names = np.unique(data_df[['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4']].values.flatten())
@@ -53,11 +32,7 @@ players_names = np.unique(data_df[['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugad
 # Llista de dies jugats
 matchdays = pd.unique(data_df['D'])
 
-
 # Crearem les matrius de `xarray` a partir de `pd.DataFrame()`. Per crear els dataframes, iniciarem els diccionaris buits on hi guardarem les dades per cada jugador. Això serà una de les dimensions de la matriu. Després, per cada partit, escriurem al diccionari el paràmetre corresponent a l'alineació. (ESCRIURE MILLOR AIXÒ)
-
-# In[6]:
-
 
 # DataFrame with the number of team occurrences
 mates_df = pd.DataFrame(columns = players_names) # number of games played with each mate
@@ -201,17 +176,7 @@ closewinsplayed_df = closewinsplayed_df.astype(float)
 # Create win / played ratio for each team (substitute 0 in the denominator by NaN, then recover 0 in the result)
 winmatesplayed_df = winmates_df.div(mates_df.replace(0, pd.NA))
 
-
-# In[7]:
-
-
-mates_df
-
-
 # Amb un codi similar, creem una matriu que descriurà els paràmetres cara a cara dels jugadors. Per exemple, quants gols ha marcat cada atacant a cada defensor.
-
-# In[8]:
-
 
 lu = data_df[data_df['Jugador 1'] == 'Pau']
 group = lu.groupby(by=['Jugador 1']) # agrupem per defensor
@@ -223,10 +188,6 @@ print(defense_rival_count['Pau'].loc['Víctor'])
 #for opponent_name in defense_rival_count.index:
 #    count = defense_rival_count[opponent_name]
 #    print(opponent_name, count)
-
-
-# In[9]:
-
 
 # DataFrame with the number of team occurrences
 receivedgoals_attack_defense_df = pd.DataFrame(columns = players_names) # number of goals conceded by each attacking player while playing on defense
@@ -315,17 +276,9 @@ games_attack_defense_df = games_attack_defense_df.astype(float)
 
 # TODO: AMPLIAR A QUAN player ÉS ATACANT I MIRAR QUÈ FAN ELS ALTRES JUGADORS (ATACANT I DEFENSOR RIVALS)
 
-
-# In[10]:
-
-
 # Fem les ràtios entre gols i partits
 receivedgoals_games_attack_defense_df = receivedgoals_attack_defense_df.div(games_attack_defense_df)
 receivedgoals_games_defense_defense_df = receivedgoals_defense_defense_df.div(games_defense_defense_df)
-
-
-# In[11]:
-
 
 # Sumem independentment de la posició del rival
 games_defense_df = games_attack_defense_df + games_defense_defense_df # partits jugats contra el rival per cada jugador en defensa
@@ -333,9 +286,7 @@ receivedgoals_defense_df = receivedgoals_attack_defense_df + receivedgoals_defen
 receivedgoals_games_defense_df = receivedgoals_defense_df.div(games_defense_df) # ràtio de gols rebuts per partits jugats contra el rival per cada jugador en defensa
 
 
-# Adaptem les matrius que hem create a xarray dataframes.
-
-# In[12]:
+# Adaptem les matrius que hem creat a xarray dataframes.
 
 
 # Creem una DataArray de xarray. Hi especifiquem els noms de cada dimensió
@@ -386,14 +337,9 @@ dataset = xr.Dataset({"Teammates": mates_da,
 # TODO: el procés de crear el DataArray a partir del DataFrame es pot automatitzar amb una funció que faci un concat al dataframe. 
 
 # Sote dataset
-dataset.to_netcdf('teammates.nc', mode='w')
+dataset.to_netcdf('../generated_files/teammates.nc', mode='w')
 
-# dataset['goals'] = goals_da # si volem afegir un nou element
-dataset
-
-
-# In[ ]:
-
+print(dataset)
 
 
 

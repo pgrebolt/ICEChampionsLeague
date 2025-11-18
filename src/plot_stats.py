@@ -3,59 +3,31 @@
 
 # Aquest codi llegeix els fitxers amb les dades de les estadístiques dels jugadors i en treu les classificacions.
 
-# In[1]:
-
-
 import asyncio
 import sys
 
 if sys.platform.startswith('win'):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-
-# In[2]:
-
-
 #!pip install numpy==1.25.2
 #!pip uninstall xarray scipy netCDF4
 #!pip install xarray scipy netCDF4
 #!pip install pybin11 --upgrade
-
-
-# In[3]:
-
 
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 import pandas as pd
 
-
-# In[4]:
-
-
 #Extraiem el dia d'avui
 from datetime import datetime
 today = datetime.today().strftime('%d/%m/%Y')
 
-
-# In[5]:
-
-
 # Definim tab20 com la paleta per defecte dels plots
 plt.rcParams['axes.prop_cycle'] = plt.cycler(color=plt.cm.tab20.colors)
 
-
-# In[6]:
-
-
 # Llegim les dades
-dataarray = xr.open_dataset('stats.nc', engine='scipy')
-dataarray
-
-
-# In[7]:
-
+dataarray = xr.open_dataset('../generated_files/stats.nc', engine='scipy')
 
 # Filtrem els jugadors que han jugat menys partits
 
@@ -67,17 +39,9 @@ mask = xr.DataArray(last_games_played > minimum_games, dims = 'player', coords =
 # Filter out players
 dataarray = dataarray.where(mask, drop=True)
 
-
-# In[8]:
-
-
 # Extreiem els noms dels jugadors i les jornades
 players_names = dataarray['player'].astype(str).values # noms dels jugadors
 matchdays = dataarray['matchday'] # array de números de jornades
-
-
-# In[9]:
-
 
 # Extreiem els valors de victòries / jugats de l'última jornada
 winplayed_values = dataarray['WinPlayed'].isel(matchday = -1).values
@@ -95,17 +59,11 @@ caption = "Games won / Games played (Matchday %.1d)" % (matchdays[-1])
 winplayed_stats = winplayed_stats.style.set_caption(caption) # afegim títol al dataframe
 
 # Guardem la taula en HTML per mostrar-la al README
-winplayed_stats.to_html('results/winplayed_stats.html')
-
-winplayed_stats
-
+winplayed_stats.to_html('../results/winplayed_stats.html')
 
 # ### Gràfic
 
 # Fem un gràfic de l'evolució dels paràmetres durant les jornades
-
-# In[10]:
-
 
 def plot_matchday_evolution(parameter, title, ax, label=False):
     #Extract parameter values
@@ -128,10 +86,6 @@ def plot_matchday_evolution(parameter, title, ax, label=False):
 
         # Add title
         ax.set_title(title, fontsize=10)
-
-
-
-# In[11]:
 
 
 # Initialize figure
@@ -170,16 +124,12 @@ fig.text(0.75, 0.91, f"Last updated: {today}", transform=fig.transFigure)
 
 # Guardem la figura per poderla posar al README
 plt.subplots_adjust(hspace=0.2)
-plt.savefig('results/winplayed_stats.png', dpi=300, bbox_inches='tight')
+plt.savefig('../results/winplayed_stats.png', dpi=300, bbox_inches='tight')
 
 
 # ### Plot ELO
 
-# In[12]:
-
-
 # Funció que fa una classifiació d'un paràmetre
-from pandas.plotting import table
 
 def plot_standings_table(parameter, title, ax):
     # Extreiem els valors de victòries / jugats de l'última jornada
@@ -204,11 +154,6 @@ def plot_standings_table(parameter, title, ax):
     for (row, col), cell in table_plt.get_celld().items():
         cell.set_height(row_height)
         cell.set_width(col_widths[col])
-
-
-
-# In[13]:
-
 
 # Initialize figure
 fig, axs = plt.subplots(figsize=(10, 12), ncols= 1, nrows = 3, sharex=True)
@@ -241,14 +186,10 @@ fig.text(0.91, 0.91, f"Last updated: {today}", transform=fig.transFigure)
 
 # Guardem la figura per poderla posar al README
 plt.subplots_adjust(hspace=0.2)
-plt.savefig('results/ELO_stats.png', dpi=300, bbox_inches='tight')
-
+plt.savefig('../results/ELO_stats.png', dpi=300, bbox_inches='tight')
 
 # # Scatter plots
-# 
 # Aquests gràfics en permeten comparar paràmetres de jugadors directament els uns amb els altres.
-
-# In[14]:
 
 
 fig, axs = plt.subplots(ncols=2, nrows=2, figsize=(10,10))
@@ -280,18 +221,8 @@ for i in range(4):
     else:
         axs[i].plot([3, 0], [0, 1])
 
-plt.show()
-plt.savefig("results/scatter_plots.png", dpi=300, bbox_inches='tight')
-
-
-# In[15]:
-
-
-dataarray
-
-
-# In[16]:
-
+#plt.show()
+plt.savefig("../results/scatter_plots.png", dpi=300, bbox_inches='tight')
 
 dataarray.close()
 
