@@ -13,7 +13,7 @@ csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&
 
 # Save as CSV
 response = requests.get(csv_url)
-with open("results.csv", "wb") as f:
+with open("../generated_files/results.csv", "wb") as f:
     f.write(response.content)
 
 print("CSV downloaded successfully!")
@@ -21,7 +21,7 @@ print("CSV downloaded successfully!")
 columns = ['D', 'Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4', 'Gols 1', 'Gols 2', 'Gols 3', 'Gols 4', 'Local', 'Visitant', 'Guanyador']
 
 # Read the CSV file and remove unnecessary rows
-df = pd.read_csv("results.csv", usecols=columns)
+df = pd.read_csv("../generated_files/results.csv", usecols=columns)
 df = df.dropna(subset=[df.columns[1]]) # treiem les files innecessàries
 
 # Passem els floats a int (les columnes numèriques)
