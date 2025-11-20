@@ -356,3 +356,9 @@ D,Jugador 1,Jugador 2,Jugador 3,Jugador 4,Gols 1,Gols 2,Gols 3,Gols 4,Local,Visi
 49,Antía,Luis,Pau,Dani,1,0,2,1,1,3,Visitant
 49,Antía,Dani,Pau,Luis,2,1,0,0,3,0,Local
 49,Antía,Dani,Pau,Luis,1,0,2,1,1,3,Visitant
+50,Gisela,Luis,Jose,Rebeca,0,3,0,2,3,2,Local
+50,Gisela,Luis,Jose,Rebeca,0,2,0,3,2,3,Visitant
+50,Gisela,Pau,Jose,Rebeca,0,3,0,0,3,0,Local
+50,Gisela,Pau,Jose,Luis,0,1,1,2,1,3,Visitant
+50,Pablo,Rebeca,Gisela,Pau,2,1,0,2,3,2,Local
+50,Pablo,Rebeca,Jose,Luis,1,0,0,3,1,3,Visitant
