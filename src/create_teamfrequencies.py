@@ -17,13 +17,21 @@ import pandas as pd
 import xarray as xr # per guardar les dades 3D
 
 # Carreguem les dades
-data_df = pd.read_csv('../generated_files/results.csv')
+season = '4' # 2,3, 4, historical
+if season == 'historical':
+    data_df = pd.read_csv(f'../generated_files/results_{season}.csv')
+else:
+    data_df = pd.read_csv(f'../generated_files/results_Season_{season}.csv')
 
 # Emplenem els espais en blanc amb 0
 data_df = data_df.fillna(0.)
 
 # Read the number of games played per each player
-dataarray = xr.open_dataset('../generated_files/stats.nc', engine='scipy')
+if season == 'historical':
+    dataarray = xr.open_dataset('../generated_files/stats_historical.nc', engine='scipy')
+else:
+    dataarray = xr.open_dataset('../generated_files/stats.nc', engine='scipy') # cal que quadri la season d'aquest codi amb la del fitxer!
+
 played_games = dataarray['GamesPlayed'].isel(matchday=-1)
 
 # Obtenim una llista amb tots els noms dels participants
@@ -336,10 +344,13 @@ dataset = xr.Dataset({"Teammates": mates_da,
 
 # TODO: el procés de crear el DataArray a partir del DataFrame es pot automatitzar amb una funció que faci un concat al dataframe. 
 
-# Sote dataset
-dataset.to_netcdf('../generated_files/teammates.nc', mode='w')
+# Save dataset
+if season == 'historical':
+    dataset.to_netcdf('../generated_files/teammates_historical.nc', mode='w')
+else:
+    dataset.to_netcdf('../generated_files/teammates.nc', mode='w')
 
-print(dataset)
+print("Frequencies saved successfully!")
 
 
 

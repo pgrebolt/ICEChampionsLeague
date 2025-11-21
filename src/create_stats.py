@@ -33,7 +33,11 @@ def join_matchdays(master_dataframe, dict_to_join):
     return master_dataframe
 
 # Carreguem les dades
-data_df = pd.read_csv('../generated_files/results.csv')
+season = '4' # 2,3, 4, historical
+if season == 'historical':
+    data_df = pd.read_csv(f'../generated_files/results_{season}.csv')
+else:
+    data_df = pd.read_csv(f'../generated_files/results_Season_{season}.csv')
 
 # Emplenem els espais en blanc amb 0
 data_df = data_df.fillna(0.)
@@ -198,7 +202,6 @@ for nmatchday in range(len(matchdays)):
 
         # Actualitzem la ponderació de rendiment pels perdedors
         if guanyador == 'Local':
-            print(r_p3, r_visitant)
             r_p3 = 1 - r_p3
             r_p4 = 1 - r_p4
 
@@ -461,12 +464,16 @@ normalized_ELO_defense = (dataset['ELODefense'] - dataset['ELODefense'].min()) /
 dataset['WeightedELO'] = normalized_ELO_attack * dataset['PlayedAttack'] / filtered_games_played + normalized_ELO_defense * dataset['PlayedDefense'] / filtered_games_played
 
 # Si algun jugador només ha jugat en una posició, pertorba la normalització min-max. Fem que el seu valor sigui nan
-print(dataset['WeightedELO'].max(), dataset['WeightedELO'].min())
+#print(dataset['WeightedELO'].max(), dataset['WeightedELO'].min())
 dataset['WeightedELO'] = dataset['WeightedELO'].where(dataset['WeightedELO'] < 500)
 dataset['WeightedELO']
 
-print(dataset)
+if season == 'historical':
+    dataset.to_netcdf('../generated_files/stats_historical.nc', mode='w')
+else:
+    dataset.to_netcdf('../generated_files/stats.nc', mode='w')
 
-dataset.to_netcdf('../generated_files/stats.nc', mode='w')
 # ds = xr.open_dataset('stats.nc', engine ='netcdf4') # si volem obrir el fitxer
+
+print("Stats created successfully.")
 
