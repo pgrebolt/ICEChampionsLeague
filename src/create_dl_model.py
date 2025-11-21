@@ -27,13 +27,10 @@ from tensorflow.keras.layers import Dense
 # Per poder entrenar el model, ens cal donar-li informació de qui està jugant (amb quins punts forts i punts febles) i quin és el resultat. Per tant, hem de llegir el fitxer amb les estadístiques de cada jugador i també el fitxer amb el registre històric de resultats.
 
 # Llegim l'històric de partits i resultats
-matches_df = pd.read_csv('../generated_files/results.csv')
-matches_df
+matches_df = pd.read_csv('../generated_files/results_historical.csv')
 
 # Llegim les estadístiques de cada jugador
-stats_xr = xr.open_dataset('../generated_files/stats.nc', engine='scipy')
-stats_xr
-
+stats_xr = xr.open_dataset('../generated_files/stats_historical.nc', engine='scipy')
 
 # Construïm una matriu amb els paràmetres dels jugadors a pista (matriu `X`) i una matriu amb el resultat (matriu `y`). La matriu `y` l'extraiem directament de `matches_df`. La matriu `X` la construïm a partir dels jugadors que són a pista a cada partit (de `matches_df`) i les estadístiques de `stats_xr`.
 
@@ -94,6 +91,7 @@ joblib.dump(scaler, '../generated_files/scaler.pkl')
 # Separem tots els partits que tenim en una mostra d'entrenament (train) i una mostra de test. Això ens permetrà avaluar el rendiment del nostre model. En aquest cas, de la mostra total un 10% serà de test i el 90% restant serà per entrenar el model.
 
 X_train, X_test, y_winning_train, y_winning_test, y_score_train, y_score_test = train_test_split(Stats_training_stand, Results_winning_training, Scores_training, test_size=0.2) # random_state=42
+print(y_score_train)
 
 # Passem els valors y al codi numèric
 y_score_train_labels = encoder_scores.inverse_transform(y_score_train)
