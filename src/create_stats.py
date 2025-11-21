@@ -46,7 +46,10 @@ data_df = data_df.fillna(0.)
 players_names = np.unique(data_df[['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4']].values.flatten())
 
 # Llista de dies jugats
-matchdays = pd.unique(data_df['D'])
+if season == 'historical':
+    matchdays = pd.unique(data_df['Total_D'])
+else:
+    matchdays = pd.unique(data_df['D'])
 
 # Comptem quants partits ha jugat cada participant
 all_players = data_df['Jugador 1'].tolist() + data_df['Jugador 2'].tolist() + data_df['Jugador 3'].tolist() + data_df['Jugador 4'].tolist()
@@ -79,7 +82,10 @@ for nmatchday in range(len(matchdays)):
         win_counts[player] = 0
 
     # Select matchdays
-    matchday_df = data_df.loc[data_df['D'] <= nmatchday+1]
+    if season == 'historical':
+        matchday_df = data_df.loc[data_df['Total_D'] <= nmatchday+1]
+    else:
+        matchday_df = data_df.loc[data_df['D'] <= nmatchday+1]
 
     # Home wins
     home_wins = matchday_df[matchday_df['Local'] > matchday_df['Visitant']]
@@ -150,7 +156,10 @@ K = 30. # ELO update constant
 
 # Actualitzem els ELO a cada partit
 for nmatchday in range(len(matchdays)):
-    matchday_df = data_df.loc[data_df['D'] == nmatchday+1].reset_index()
+    if season == 'historical':
+        matchday_df = data_df.loc[data_df['Total_D'] == nmatchday+1].reset_index()
+    else:
+        matchday_df = data_df.loc[data_df['D'] == nmatchday+1].reset_index()
 
     for nmatch in range(matchday_df.shape[0]):
         match_df = matchday_df[matchday_df.index == nmatch]
@@ -258,7 +267,10 @@ for nmatchday in range(len(matchdays)):
         scoreddefenseplayed_counts[player] = 0
 
     # Select matchdays
-    matchday_df = data_df.loc[data_df['D'] <= nmatchday+1]
+    if season == 'historical':
+        matchday_df = data_df.loc[data_df['Total_D'] <= nmatchday+1]
+    else:
+        matchday_df = data_df.loc[data_df['D'] <= nmatchday + 1]
 
     # Select the dataframe index for the last recorded game of this matchday
     # last_matchday_index = matchday_df['D'].index.max()
@@ -331,7 +343,10 @@ for nmatchday in range(len(matchdays)):
         receiveddefenseplayed_counts[player] = 0
 
     # Select matchdays
-    matchday_df = data_df.loc[data_df['D'] <= nmatchday+1]
+    if season == 'historical':
+        matchday_df = data_df.loc[data_df['Total_D'] <= nmatchday+1]
+    else:
+        matchday_df = data_df.loc[data_df['D'] <= nmatchday+1]
 
     # Select the dataframe index for the last recorded game of this matchday
     # last_matchday_index = matchday_df['D'].index.max()

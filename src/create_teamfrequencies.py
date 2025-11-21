@@ -38,7 +38,10 @@ played_games = dataarray['GamesPlayed'].isel(matchday=-1)
 players_names = np.unique(data_df[['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4']].values.flatten())
 
 # Llista de dies jugats
-matchdays = pd.unique(data_df['D'])
+if season == 'historical':
+    matchdays = pd.unique(data_df['Total_D'])
+else:
+    matchdays = pd.unique(data_df['D'])
 
 # Crearem les matrius de `xarray` a partir de `pd.DataFrame()`. Per crear els dataframes, iniciarem els diccionaris buits on hi guardarem les dades per cada jugador. Això serà una de les dimensions de la matriu. Després, per cada partit, escriurem al diccionari el paràmetre corresponent a l'alineació. (ESCRIURE MILLOR AIXÒ)
 
