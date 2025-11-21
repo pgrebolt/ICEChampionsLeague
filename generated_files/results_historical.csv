@@ -612,7 +612,7 @@ Season,Total_D,D,Jugador 1,Jugador 2,Jugador 3,Jugador 4,Gols 1,Gols 2,Gols 3,Go
 3,100,54,Guille,Luis,Víctor,Rebeca,2,1,1,0,3,1,Local
 3,100,54,Guille,Luis,Dani,Marie,0,1,2,0,1,3,Visitant
 3,101,55,Víctor,Rebeca,Pau,Guille,1,0,2,1,1,3,Visitant
-3,101,55,Tiziano,Gisela,Pau,Guille,2,0,1,1,2,2,FALSE
+3,101,55,Tiziano,Gisela,Pau,Guille,2,0,2,1,2,3,Visitant
 3,101,55,Rebeca,Víctor,Pau,Guille,0,3,1,1,3,2,Local
 3,101,55,Rebeca,Víctor,Tiziano,Gisela,1,2,1,0,3,1,Local
 4,102,1,Guille,Víctor,Rebeca,Antía,0,3,1,0,3,1,Local
