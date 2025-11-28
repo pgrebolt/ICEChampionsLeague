@@ -9,6 +9,13 @@ git add results/winplayed_stats.png
 git add generated_files/results.csv
 git add generated_files/stats.nc
 git add generated_files/teammates.nc
+git add generated_files/results_historical.csv
+git add generated_files/stats_historical.nc
+git add generated_files/teammates_historical.nc
+git add results/ELO_stats_historical.png
+git add results/frequencies_historical.png
+git add results/winplayed_stats_historical.png
+
 
 ## Extract matchday number
 file="generated_files/results.csv"
