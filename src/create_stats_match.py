@@ -16,21 +16,213 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import xarray as xr # per guardar les dades 3D
 from collections import Counter
+from sklearn.preprocessing import StandardScaler
 
 # Definim tab20 com la paleta per defecte dels plots
 plt.rcParams['axes.prop_cycle'] = plt.cycler(color=plt.cm.tab20.colors)
 
-# Definim una funció que afegeix un nou matchday al ataframe
-def join_matchdays(master_dataframe, dict_to_join):
-     # Create dataframe with results of this matchday
-    matchday_results = pd.DataFrame(dict_to_join.items()).transpose().reset_index(drop=True) # la llista vertical de resultats per jugador, la passem a fila
-    matchday_results.columns = matchday_results.iloc[0] # definim que els noms de la columna són els noms dels jugadors (que surten a la 1a fila)
-    matchday_ratio = matchday_results.drop(matchday_results.index[0]) #esborrem la primera fila, que conté els noms del jugadors
+# Actualitzem els ELO a cada partit
+#for nmatch in range(matches):
 
-    # Agrupem els resultats d'aquesta jornada amb els de les anteriors (columna = nom jugador; fila = matchday)
-    master_dataframe = pd.concat([master_dataframe, matchday_ratio], ignore_index=True)
+#    match_df = data_df.iloc[nmatch].reset_index()
 
-    return master_dataframe
+    # Noms dels jugadors
+#    j1_name, j2_name, j3_name, j4_name = match_df['Jugador 1'].values[0], match_df['Jugador 2'].values[0], match_df['Jugador 3'].values[0], match_df['Jugador 4'].values[0]
+
+    # Nombre de partits jugats com a atacant o com a defensa (el +1 serveix per facilitar el càlcul posterior i indica que en el partit actual també es guanya experiència)
+     #    n1_played = playeddefense_matches.iloc[nmatch][j1_name].values[0] +1 # TODO: fer que playeddefense_matches tingui una columna d'índex de partit, per poder quadrar ara (igual pels altres dataframes)
+     #    n2_played = playedattack_matchdays[playedattack_matchdays.index == nmatchday][j2_name].values[0] +1
+     #    n3_played = playeddefense_matchdays[playeddefense_matchdays.index == nmatchday][j3_name].values[0] +1
+     #    n4_played = playedattack_matchdays[playedattack_matchdays.index == nmatchday][j4_name].values[0] +1
+
+    # ELO mitjà per equip
+     #    ELO_local = (elo_rating_defense[j1_name]*n1_played + elo_rating_attack[j2_name]*n2_played) / (n1_played + n2_played)
+     #    ELO_visitant = (elo_rating_defense[j3_name]*n3_played + elo_rating_attack[j4_name]*n4_played) / (n3_played + n4_played)
+
+    # Probabilitats de victòria
+     #    P_local = 1 / (1 + 10**((ELO_visitant - ELO_local) / 400))
+     #    P_visitant = 1 / (1 + 10**((ELO_local - ELO_visitant) / 400))
+
+    # Outcome segons local (1 si guanya local, 0 si guanya visitant)
+     #    guanyador = match_df['Guanyador'].values[0]
+     #    outcome_local = 1 if (guanyador=='Local') else 0
+     #    outcome_visitant = 1 if (guanyador=='Visitant') else 0
+
+    # Paràmetres de ponderació
+     #    mu, lamb = 0.3, 0.7
+
+    # Gols que ha rebut cada equip
+     #    gols_rebuts_local = match_df['Gols 3'].values[0] + match_df['Gols 4'].values[0]
+     #    gols_rebuts_visitant = match_df['Gols 1'].values[0] + match_df['Gols 2'].values[0]
+
+    # Rendiment sobre la contribució al partit segons posició
+     #    r_p1 = lamb * (1 - gols_rebuts_local / 3) + mu * (match_df['Gols 1'].values[0] / 3) # defensa
+     #    r_p2 = mu * (1 - gols_rebuts_local / 3) + lamb * (match_df['Gols 2'].values[0] / 3) # atac
+     #    r_p3 = lamb * (1 - gols_rebuts_visitant / 3) + mu * (match_df['Gols 3'].values[0] / 3)  # defensa
+     #    r_p4 = mu * (1 - gols_rebuts_visitant / 3) + lamb * (match_df['Gols 4'].values[0] / 3) # atac
+
+    # Imposem un rendiment mínim de 0.1
+     #    r_p1 = max(r_p1, 0.1)
+     #    r_p2 = max(r_p2, 0.1)
+     #    r_p3 = max(r_p3, 0.1)
+     #    r_p4 = max(r_p4, 0.1)
+
+    # Suma dels rendiments
+     #    r_local = r_p1 + r_p2
+     #    r_visitant = r_p3 + r_p4
+
+    # Actualitzem la ponderació de rendiment pels perdedors
+     #    if guanyador == 'Local':
+     #        r_p3 = 1 - r_p3
+     #        r_p4 = 1 - r_p4
+
+        # Imposem el rendiment mínim
+     #        r_p3 = min(r_p3, 0.9)
+     #        r_p4 = min(r_p4, 0.9)
+
+     #        r_visitant = r_p3 + r_p4
+     #    elif guanyador == 'Visitant':
+     #        r_p1 = 1 - r_p1
+     #        r_p2 = 1 - r_p2
+
+     #        # Imposem el rendiment mínim
+     #        r_p1 = min(r_p1, 0.9)
+     #        r_p2 = min(r_p2, 0.9)
+
+     #        r_local = r_p1 + r_p2
+
+    # Actualitzem ELOS
+     #    elo_rating_defense[j1_name] = elo_rating_defense[j1_name] + K * (outcome_local - P_local) * r_p1 / r_local
+     #    elo_rating_attack[j2_name] = elo_rating_attack[j2_name] + K * (outcome_local - P_local) * r_p2 / r_local
+     #    elo_rating_defense[j3_name] = elo_rating_defense[j3_name] + K * (outcome_visitant - P_visitant) * r_p3 / r_visitant
+     #    elo_rating_attack[j4_name] = elo_rating_attack[j4_name] + K * (outcome_visitant - P_visitant) * r_p4 / r_visitant
+
+
+# Funció per actualitzar l'ELO després de cada partit
+def update_elo(results_df, parameters):
+    # ELO inicial
+    initial_ELO = 1000.
+
+    # ELO update constant
+    K = 30.
+
+    # Paràmetres de ponderació
+    mu, lamb = 0.3, 0.7
+
+    #################
+    # Pel primer partit, tots els jugadors tenen l'ELO inicial
+    if results_df.shape[0] == 1:  # pel primer partit
+        return ({players_names[player_index]: initial_ELO for player_index in range(len(players_names))},
+                {players_names[player_index]: initial_ELO for player_index in range(len(players_names))},
+                {players_names[player_index]: 1/len(players_names) for player_index in range(len(players_names))})
+    #################
+
+    # Obtenim els noms jugadors del partit actual (anotat com a [-1])
+    home_defender_1 = results_df.iloc[-1]['Jugador 1']
+    home_attacker_1 = results_df.iloc[-1]['Jugador 2']
+    away_defender_1 = results_df.iloc[-1]['Jugador 3']
+    away_attacker_1 = results_df.iloc[-1]['Jugador 4']
+
+    # Obtenim l'índex que ocupa cada jugador a la llista de noms
+    home_defender_index = np.where(players_names == home_defender_1)[0][0]
+    home_attacker_index =  np.where(players_names == home_attacker_1)[0][0]
+    away_defender_index =  np.where(players_names == away_defender_1)[0][0]
+    away_attacker_index =  np.where(players_names == away_attacker_1)[0][0]
+
+    # ELO (rating) actuals (el [-1] representa l'últim partit jugat, l'últim ELO)
+    R_home_defender = parameters['ELODefense'][-1][home_defender_index]
+    R_home_attacker = parameters['ELOAttack'][-1][home_attacker_index]
+    R_away_defender = parameters['ELODefense'][-1][away_defender_index]
+    R_away_attacker = parameters['ELOAttack'][-1][away_attacker_index]
+
+    # Partits jugats per cada jugador
+    n_home_defender = parameters['PlayedDefense'][-1][home_defender_index]
+    n_home_attacker = parameters['PlayedAttack'][-1][home_attacker_index]
+    n_away_defender = parameters['PlayedDefense'][-1][away_defender_index]
+    n_away_attacker = parameters['PlayedAttack'][-1][away_attacker_index]
+
+    # ELO mitjà per equip
+    E_home = (R_home_defender * n_home_defender + R_home_attacker * n_home_attacker) / (n_home_defender + n_home_attacker)
+    E_away = (R_away_defender * n_away_defender + R_away_attacker * n_away_attacker) / (n_away_defender + n_away_attacker)
+
+    # Probabilitats de victòria segons ELO
+    P_home = 1 / (1 + 10 ** ((E_away - E_home) / 400))
+    P_away = 1 / (1 + 10 ** ((E_home - E_away) / 400))
+
+    # Resultat del partit
+    guanyador = results_df.iloc[-1]['Guanyador']
+    if guanyador == 'Local':
+        S_home = 1
+        S_away = 0
+    else:
+        S_home = 0
+        S_away = 1
+
+    ## Rendiments individualitzats
+
+    # Gols que ha rebut cada equip
+    received_home = results_df.iloc[-1]['Visitant']
+    received_away = results_df.iloc[-1]['Local']
+
+    # Rendiment sobre la contribució al partit segons posició
+    r_defender_home = lamb * (1 - received_home/3) + mu*(results_df.iloc[-1]['Gols 1']/3) # defensa
+    r_attacker_home = mu * (1 - received_home/3) + lamb*(results_df.iloc[-1]['Gols 2']/3) # atac
+    r_defender_away = lamb * (1 - received_away/3) + mu*(results_df.iloc[-1]['Gols 3']/3)  # defensa
+    r_attacker_away = mu * (1 - received_away/3) + lamb*(results_df.iloc[-1]['Gols 4']/3) # atac
+
+    # Imposem un rendiment mínim de 0.1
+    r_defender_home = max(r_defender_home, 0.1)
+    r_attacker_home = max(r_attacker_home, 0.1)
+    r_defender_away = max(r_defender_away, 0.1)
+    r_attacker_away = max(r_attacker_away, 0.1)
+
+    # Suma dels rendiments
+    r_home = r_defender_home + r_attacker_home
+    r_away = r_defender_away + r_attacker_away
+
+    # Actualitzem la ponderació de rendiment pels perdedors (amb un rendiment mínim)
+    if guanyador == 'Local':
+        r_defender_away = min(1 - r_defender_away, 0.9)
+        r_attacker_away = min(1 - r_attacker_away, 0.9)
+        r_away = r_defender_away + r_attacker_away
+    elif guanyador == 'Visitant':
+        r_defender_home = min(1 - r_defender_home, 0.9)
+        r_attacker_home = min(1 - r_attacker_home, 0.9)
+        r_home = r_defender_home + r_attacker_home
+
+    ## Actualització dels ràtings ELO
+    R_home_defender_new = R_home_defender + K * (S_home - P_home) * r_defender_home / r_home
+    R_home_attacker_new = R_home_attacker + K * (S_home - P_home) * r_attacker_home / r_home
+    R_away_defender_new = R_away_defender + K * (S_away - P_away) * r_defender_away / r_away
+    R_away_attacker_new = R_away_attacker + K * (S_away - P_away) * r_attacker_away / r_away
+
+    ## ELO ponderat
+    # Normalizem ELOs (normalització min-max)
+    defense_rng = max(parameters['ELODefense'][-1]) - min(parameters['ELODefense'][-1]) # denominador (max - min)
+    attack_rng = max(parameters['ELOAttack'][-1]) - min(parameters['ELOAttack'][-1])
+    defense_rng = defense_rng if defense_rng != 0 else 1  # Evitem divisió per 0
+    attack_rng = attack_rng if attack_rng != 0 else 1  # Evitem divisió per 0
+    normalized_ELO_defense = [(parameters['ELODefense'][-1][player_index] - min(parameters['ELODefense'][-1])) / defense_rng for player_index in range(len(players_names))]
+    normalized_ELO_attack = [(parameters['ELOAttack'][-1][player_index] - min(parameters['ELOAttack'][-1])) / attack_rng for player_index in range(len(players_names))]
+
+    # Calculem el valor ponderat
+    weight_attack = parameters['PlayedAttack'][-1] / parameters['GamesPlayed'][-1]
+    weight_defense = parameters['PlayedDefense'][-1] / parameters['GamesPlayed'][-1]
+    weight_attack = np.where(weight_attack==np.nan, 1., weight_attack)  # Evitem NaN (si no s'ha jugat cap partit encara)
+    weight_defense = np.where(weight_defense==np.nan, 1., weight_defense)
+
+    weighted_ELO = {players_names[player_index]: weight_defense * normalized_ELO_defense[player_index] + weight_attack * normalized_ELO_attack[player_index] for player_index in range(len(players_names))}
+
+    # Actualitzem la matriu amb tots els ELO (només els jugadors del partit actual)
+    parameters['ELODefense'][-1][home_defender_index] = R_home_defender_new
+    parameters['ELOAttack'][-1][home_attacker_index] = R_home_attacker_new
+    parameters['ELODefense'][-1][away_defender_index] = R_away_defender_new
+    parameters['ELOAttack'][-1][away_attacker_index] = R_away_attacker_new
+
+    # Tornem un diccionari per atac i un altre per defensa
+    return ({players_names[player_index]: parameters['ELODefense'][-1][player_index] for player_index in range(len(players_names))},
+            {players_names[player_index]: parameters['ELOAttack'][-1][player_index] for player_index in range(len(players_names))},
+            weighted_ELO)
 
 # Carreguem les dades
 season = 'historical' # 2,3, 4, historical
@@ -70,8 +262,8 @@ params = [
     "Scored", "ScoredPlayed", "ScoredAttack", "ScoredDefense",
     "ScoredAttackPlayed", "ScoredDefensePlayed",
     "Received", "ReceivedPlayed", "ReceivedAttack", "ReceivedDefense",
-    "ReceivedAttackPlayed", "ReceivedDefensePlayed"
-#    "ELOAttack", "ELODefense"
+    "ReceivedAttackPlayed", "ReceivedDefensePlayed",
+    "ELOAttack", "ELODefense", "WeightedELO"
 ]
 
 # Diccionaris on anirem guardant les dades abans de crear el xarray Dataset
@@ -90,8 +282,10 @@ playeddefense_matchdays = pd.DataFrame(columns = players_names) # jugats defensa
 winplayed_matchdays = pd.DataFrame(columns=players_names) # guanyats / jugats
 winattackplayed_matchdays = pd.DataFrame(columns=players_names) # guanyats / jugats (atac)
 windefenseplayed_matchdays = pd.DataFrame(columns=players_names) # guanyats / jugats (defensa)
+elo_attack_matchdays = pd.DataFrame(columns = players_names)
+elo_defense_matchdays = pd.DataFrame(columns = players_names)
 
-# TODO:CREAR UN ÚNIC DATAFRAME AMB TOTES LES KEYS, QUE ES VAGI ACTUALITZANT. No puc sumar diccionaris
+# Inicialitzem els diccionaris. Afegim tots els jugadors amb 0 partits jugats
 playeddefense = {player: 0 for player in players_names}
 playedattack = {player: 0 for player in players_names}
 played_j1 = {player: 0 for player in players_names}
@@ -99,6 +293,11 @@ played_j2 = {player: 0 for player in players_names}
 played_j3 = {player: 0 for player in players_names}
 played_j4 = {player: 0 for player in players_names}
 
+#ELO rating inicial
+elo_rating_attack = {player: 1000. for player in players_names}
+elo_rating_defense = {player: 1000. for player in players_names}
+
+# Iterem per cada partit
 for match in range(1, matches+1):
     previous_matches = data_df.iloc[:match] # dataframe amb tots els partits previs
 
@@ -175,9 +374,11 @@ for match in range(1, matches+1):
     receiveddefenseplayed_match = {k: receiveddefense_match.get(k, 0) / (playeddefense_match.get(k, 1) if playeddefense_match.get(k, 1) else 1) for k in players_names}
     receivedplayed_match = {k: received_match.get(k, 0) / (played.get(k, 1) if played.get(k, 1) else 1) for k in players_names}
 
+    ## Càlcul d'ELO actualitzat després d'aquest partit
+    elo_defense_match, elo_attack_match, elo_weighted_match = update_elo(previous_matches, _acc)
 
-    ## Càlcul d'ELO
-    #TODO: fer el càlcul d'elo amb una funció que es cridarà aquí
+    print(elo_defense_match)
+    print(elo_weighted_match)
 
     # Guanyats
     winattackplayed_match = {k: winattack_match.get(k, 0) / (playedattack_match.get(k, 1) if playedattack_match.get(k, 1) else 1) for k in players_names} # evitem divisió per 0
@@ -208,8 +409,9 @@ for match in range(1, matches+1):
     _acc["ReceivedDefensePlayed"].append(_dict_to_row(receiveddefenseplayed_match, players_names))
 
     # ELO dicts (ensure these are per-matchday snapshots or dictionaries of current ratings)
-    #_acc["ELOAttack"].append(_dict_to_row(elo_rating_attack, players_names))
-    #_acc["ELODefense"].append(_dict_to_row(elo_rating_defense, players_names))
+    _acc["ELOAttack"].append(_dict_to_row(elo_attack_match, players_names))
+    _acc["ELODefense"].append(_dict_to_row(elo_defense_match, players_names))
+    _acc["WeightedELO"].append(_dict_to_row(elo_weighted_match, players_names))
 
     # track matchday coordinate (use whatever label you want; here nmatchday+1)
     _match_coords.append(match)
@@ -229,7 +431,29 @@ ds = xr.Dataset(
 )
 print(ds)
 print(matches)
-print(ds['GamesPlayed'].sel(match=matches, player='Pau').max())
+print(ds['ReceivedAttack'].sel(match=matches, player='Pau').max())
+
+# Afegim el càlcul dels índexs d'atac i de defensa en base al paràmetres que ja hem calculat:
+#
+#     attack_index = goals_attack * games_attack / games_total + goals_defense * games_defense / games_total
+#
+# També afegim el càlcul d'ELO total ponderat pel nombre de partits que ha jugat cada jugador a cada posició. Cal tenir en compte si el jugador no ha jugat cap partit. Utilitzem un nombre total de partits fals per fer el recompte. Per evitar divisions per 0, on hi havia un 0 al nombre de partits jugats hi posem un 1. El 0 de la divisió el farà el numerador.
+
+#filtered_games_played = (ds['GamesPlayed']).where(ds['GamesPlayed'] != 0, 1)
+
+#dataset['AttackIndex'] = dataset['ScoredAttack'] * dataset['PlayedAttack'] / filtered_games_played + dataset['ScoredDefense'] * dataset['PlayedDefense'] / filtered_games_played
+#dataset['DefenseIndex'] = dataset['ReceivedAttack'] * dataset['PlayedAttack'] / filtered_games_played + dataset['ScoredDefense'] * dataset['PlayedDefense'] / filtered_games_played
+
+# Weighted ELO a partir del valors normalitzats min-max
+normalized_ELO_attack = (dataset['ELOAttack'] - dataset['ELOAttack'].min()) / (dataset['ELOAttack'].max() - dataset['ELOAttack'].min())
+normalized_ELO_defense = (dataset['ELODefense'] - dataset['ELODefense'].min()) / (dataset['ELODefense'].max() - dataset['ELODefense'].min())
+
+dataset['WeightedELO'] = normalized_ELO_attack * dataset['PlayedAttack'] / filtered_games_played + normalized_ELO_defense * dataset['PlayedDefense'] / filtered_games_played
+
+# Si algun jugador només ha jugat en una posició, pertorba la normalització min-max. Fem que el seu valor sigui nan
+#print(dataset['WeightedELO'].max(), dataset['WeightedELO'].min())
+dataset['WeightedELO'] = dataset['WeightedELO'].where(dataset['WeightedELO'] < 500)
+
 ## Desem el dataset a un fitxer netCDF
 #if season == 'historical':
 #    dataset.to_netcdf('../generated_files/stats_historical.nc', mode='w')
@@ -243,266 +467,5 @@ print(ds['GamesPlayed'].sel(match=matches, player='Pau').max())
     # A partir de previous_matches faria el recompte de gols anotats per cada jugador i estadístiques similars.
     # ELO s'ha de calcular per cada partit inidividualment, perquè es vagi actualitzant
     #print(previous_matches.groupby('Guanyador').count())
-
-for nmatchday in range(len(matchdays)): #AIXÒ INCLOURE DINS L'ANTERIOR LOOP (partit a partit. posar una marca quan es canvii de matchday)
-    # Initialize an empty dictionary to store data
-    played_counts = {}
-    winplayed_counts = {}
-    playedattack_counts = {}
-    playeddefense_counts = {}
-    win_counts = {}
-    winattack_counts = {}
-    windefense_counts = {}
-    winattackplayed_counts = {}
-    windefenseplayed_counts = {}
-
-    for player in players_names: # set all initial wins to 0
-        win_counts[player] = 0
-
-    # Select matchdays
-    if season == 'historical':
-        matchday_df = data_df.loc[data_df['Total_D'] <= nmatchday+1]
-    else:
-        matchday_df = data_df.loc[data_df['D'] <= nmatchday+1]
-
-    # Home wins
-    home_wins = matchday_df[matchday_df['Local'] > matchday_df['Visitant']]
-    for player in home_wins['Jugador 1'].tolist() + home_wins['Jugador 2'].tolist(): #pick from list of all winners
-        win_counts[player] = win_counts.get(player, 0) + 1
-
-    # Away wins
-    away_wins = matchday_df[matchday_df['Visitant'] > matchday_df['Local']]
-    for player in away_wins['Jugador 3'].tolist() + away_wins['Jugador 4'].tolist():
-        win_counts[player] = win_counts.get(player, 0) + 1
-
-    # Attack wins
-    for player in home_wins['Jugador 2'].tolist() + away_wins['Jugador 4'].tolist():
-        winattack_counts[player] = winattack_counts.get(player, 0) + 1
-
-    # Defense wins 
-    for player in home_wins['Jugador 1'].tolist() + away_wins['Jugador 3'].tolist():
-        windefense_counts[player] = windefense_counts.get(player, 0) + 1
-
-    # Games played
-    for player in players_names:
-        # Comptem quantes vegades el nom del jugador apareix al registre de partits
-        games_played = (matchday_df[['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4']] == player).sum().sum()
-        games_playedattack = (matchday_df[['Jugador 2', 'Jugador 4']] == player).sum().sum()
-        games_playeddefense = (matchday_df[['Jugador 1', 'Jugador 3']] == player).sum().sum()
-
-        # Desem a un diccionari el recompte de partits jugats
-        played_counts[player] = games_played
-        playedattack_counts[player] = games_playedattack
-        playeddefense_counts[player] = games_playeddefense
-
-        # Desem a un diccionari la ràtio entre partits guanyats i partits jugats
-        if games_played == 0:
-            winplayed_counts[player] = 0
-        else:
-            winplayed_counts[player] = win_counts.get(player, 0) / games_played
-        if games_playedattack == 0:
-            winattackplayed_counts[player] = 0
-        else:
-            winattackplayed_counts[player] = winattack_counts.get(player, 0) / games_playedattack
-        if games_playeddefense == 0:
-            windefenseplayed_counts[player] = 0
-        else:
-            windefenseplayed_counts[player] = windefense_counts.get(player, 0) / games_playeddefense
-        #print(player)
-        #win_counts[player] = win_counts.get(player, 0) / 
-
-    # Agrupem els resultats d'aquesta jornada amb els de les anteriors (columna = nom jugador; fila = matchday)
-    winplayed_matchdays = join_matchdays(winplayed_matchdays, winplayed_counts)
-    played_matchdays = join_matchdays(played_matchdays, played_counts)
-    playedattack_matchdays = join_matchdays(playedattack_matchdays, playedattack_counts)
-    playeddefense_matchdays = join_matchdays(playeddefense_matchdays, playeddefense_counts)
-    winattackplayed_matchdays = join_matchdays(winattackplayed_matchdays, winattackplayed_counts)
-    windefenseplayed_matchdays = join_matchdays(windefenseplayed_matchdays, windefenseplayed_counts)
-
-# DataFrames on hi guardarem els valors ELO a cada jornada
-elo_attack_matchdays = pd.DataFrame(columns = players_names)
-elo_defense_matchdays = pd.DataFrame(columns = players_names)
-
-#ELO rating inicial
-elo_rating_attack = {}
-elo_rating_defense = {}
-for player in players_names:
-    elo_rating_attack[player] = 1000.
-    elo_rating_defense[player] = 1000.
-
-K = 30. # ELO update constant
-
-# Actualitzem els ELO a cada partit
-for nmatch in range(matches):
-
-    match_df = data_df.iloc[nmatch].reset_index()
-
-    # Noms dels jugadors
-    j1_name, j2_name, j3_name, j4_name = match_df['Jugador 1'].values[0], match_df['Jugador 2'].values[0], match_df['Jugador 3'].values[0], match_df['Jugador 4'].values[0]
-
-    # Nombre de partits jugats com a atacant o com a defensa (el +1 serveix per facilitar el càlcul posterior i indica que en el partit actual també es guanya experiència)
-    n1_played = playeddefense_matches.iloc[nmatch][j1_name].values[0] +1 # TODO: fer que playeddefense_matches tingui una columna d'índex de partit, per poder quadrar ara (igual pels altres dataframes)
-    n2_played = playedattack_matchdays[playedattack_matchdays.index == nmatchday][j2_name].values[0] +1
-    n3_played = playeddefense_matchdays[playeddefense_matchdays.index == nmatchday][j3_name].values[0] +1
-    n4_played = playedattack_matchdays[playedattack_matchdays.index == nmatchday][j4_name].values[0] +1
-
-    # ELO mitjà per equip
-    ELO_local = (elo_rating_defense[j1_name]*n1_played + elo_rating_attack[j2_name]*n2_played) / (n1_played + n2_played)
-    ELO_visitant = (elo_rating_defense[j3_name]*n3_played + elo_rating_attack[j4_name]*n4_played) / (n3_played + n4_played)
-
-    # Probabilitats de victòria
-    P_local = 1 / (1 + 10**((ELO_visitant - ELO_local) / 400))
-    P_visitant = 1 / (1 + 10**((ELO_local - ELO_visitant) / 400))
-
-    # Outcome segons local (1 si guanya local, 0 si guanya visitant)
-    guanyador = match_df['Guanyador'].values[0]
-    outcome_local = 1 if (guanyador=='Local') else 0
-    outcome_visitant = 1 if (guanyador=='Visitant') else 0
-
-    # Paràmetres de ponderació
-    mu, lamb = 0.3, 0.7
-
-    # Gols que ha rebut cada equip
-    gols_rebuts_local = match_df['Gols 3'].values[0] + match_df['Gols 4'].values[0]
-    gols_rebuts_visitant = match_df['Gols 1'].values[0] + match_df['Gols 2'].values[0]
-
-    # Rendiment sobre la contribució al partit segons posició
-    r_p1 = lamb * (1 - gols_rebuts_local / 3) + mu * (match_df['Gols 1'].values[0] / 3) # defensa
-    r_p2 = mu * (1 - gols_rebuts_local / 3) + lamb * (match_df['Gols 2'].values[0] / 3) # atac
-    r_p3 = lamb * (1 - gols_rebuts_visitant / 3) + mu * (match_df['Gols 3'].values[0] / 3)  # defensa
-    r_p4 = mu * (1 - gols_rebuts_visitant / 3) + lamb * (match_df['Gols 4'].values[0] / 3) # atac
-
-    # Imposem un rendiment mínim de 0.1
-    r_p1 = max(r_p1, 0.1)
-    r_p2 = max(r_p2, 0.1)
-    r_p3 = max(r_p3, 0.1)
-    r_p4 = max(r_p4, 0.1)
-
-    # Suma dels rendiments
-    r_local = r_p1 + r_p2
-    r_visitant = r_p3 + r_p4
-
-    # Actualitzem la ponderació de rendiment pels perdedors
-    if guanyador == 'Local':
-        r_p3 = 1 - r_p3
-        r_p4 = 1 - r_p4
-
-        # Imposem el rendiment mínim
-        r_p3 = min(r_p3, 0.9)
-        r_p4 = min(r_p4, 0.9)
-
-        r_visitant = r_p3 + r_p4
-    elif guanyador == 'Visitant':
-        r_p1 = 1 - r_p1
-        r_p2 = 1 - r_p2
-
-        # Imposem el rendiment mínim
-        r_p1 = min(r_p1, 0.9)
-        r_p2 = min(r_p2, 0.9)
-
-        r_local = r_p1 + r_p2
-
-    # Actualitzem ELOS
-    elo_rating_defense[j1_name] = elo_rating_defense[j1_name] + K * (outcome_local - P_local) * r_p1 / r_local
-    elo_rating_attack[j2_name] = elo_rating_attack[j2_name] + K * (outcome_local - P_local) * r_p2 / r_local
-    elo_rating_defense[j3_name] = elo_rating_defense[j3_name] + K * (outcome_visitant - P_visitant) * r_p3 / r_visitant
-    elo_rating_attack[j4_name] = elo_rating_attack[j4_name] + K * (outcome_visitant - P_visitant) * r_p4 / r_visitant
-
-    # Afegim l'ELO actualitzat d'aquest matchday
-    elo_attack_matchdays = join_matchdays(elo_attack_matchdays, elo_rating_attack)
-    elo_defense_matchdays = join_matchdays(elo_defense_matchdays, elo_rating_defense)        
-
-
-
-# Desem les dades a un xarray. Aquest format permet emmagatzemar matrius 3D, cosa que pandas no ho permet. A la nostra matriu tindrem dimensions (Nom de jugador, Dia de partit, Paràmetre). Això ens permet accedir a l'element que deseitgem.
-
-# Creem una DataArray de xarray. Hi especifiquem els noms de cada dimensió
-winplayed_matchdays_da = xr.DataArray(winplayed_matchdays.values, dims = ('matchday', 'player'),
-                                      coords = {'matchday': winplayed_matchdays.index, 'player': winplayed_matchdays.columns})
-played_matchdays_da = xr.DataArray(played_matchdays.values, dims = ('matchday', 'player'),
-                                      coords = {'matchday': played_matchdays.index, 'player': played_matchdays.columns})
-playedattack_matchdays_da = xr.DataArray(playedattack_matchdays.values, dims = ('matchday', 'player'),
-                                      coords = {'matchday': playedattack_matchdays.index, 'player': playedattack_matchdays.columns})
-playeddefense_matchdays_da = xr.DataArray(playeddefense_matchdays.values, dims = ('matchday', 'player'),
-                                      coords = {'matchday': playeddefense_matchdays.index, 'player': playedattack_matchdays.columns})
-winattackplayed_matchdays_da = xr.DataArray(winattackplayed_matchdays.values, dims = ('matchday', 'player'),
-                                      coords = {'matchday': winattackplayed_matchdays.index, 'player': winattackplayed_matchdays.columns})
-windefenseplayed_matchdays_da = xr.DataArray(windefenseplayed_matchdays.values, dims = ('matchday', 'player'),
-                                      coords = {'matchday': windefenseplayed_matchdays.index, 'player': windefenseplayed_matchdays.columns})
-scored_matchdays_da = xr.DataArray(scored_matchdays.values, dims = ('matchday', 'player'),
-                                      coords = {'matchday': scored_matchdays.index, 'player': scored_matchdays.columns})
-scoredplayed_matchdays_da = xr.DataArray(scoredplayed_matchdays.values, dims = ('matchday', 'player'),
-                                      coords = {'matchday': scoredplayed_matchdays.index, 'player': scoredplayed_matchdays.columns})
-scoredattack_matchdays_da = xr.DataArray(scoredattack_matchdays.values, dims = ('matchday', 'player'),
-                                      coords = {'matchday': scoredattack_matchdays.index, 'player': scoredattack_matchdays.columns})
-scoreddefense_matchdays_da = xr.DataArray(scoreddefense_matchdays.values, dims = ('matchday', 'player'),
-                                      coords = {'matchday': scoreddefense_matchdays.index, 'player': scoreddefense_matchdays.columns})
-scoredattackplayed_matchdays_da = xr.DataArray(scoredattackplayed_matchdays.values, dims = ('matchday', 'player'),
-                                      coords = {'matchday': scoredplayed_matchdays.index, 'player': scoredplayed_matchdays.columns})
-scoreddefenseplayed_matchdays_da = xr.DataArray(scoreddefenseplayed_matchdays.values, dims = ('matchday', 'player'),
-                                      coords = {'matchday': scoredplayed_matchdays.index, 'player': scoredplayed_matchdays.columns})
-received_matchdays_da = xr.DataArray(received_matchdays.values, dims = ('matchday', 'player'),
-                                      coords = {'matchday': received_matchdays.index, 'player': received_matchdays.columns})
-receivedplayed_matchdays_da = xr.DataArray(receivedplayed_matchdays.values, dims = ('matchday', 'player'),
-                                      coords = {'matchday': receivedplayed_matchdays.index, 'player': receivedplayed_matchdays.columns})
-receivedattack_matchdays_da = xr.DataArray(receivedattack_matchdays.values, dims = ('matchday', 'player'),
-                                      coords = {'matchday': receivedattack_matchdays.index, 'player': receivedattack_matchdays.columns})
-receiveddefense_matchdays_da = xr.DataArray(receiveddefense_matchdays.values, dims = ('matchday', 'player'),
-                                      coords = {'matchday': receiveddefense_matchdays.index, 'player': receiveddefense_matchdays.columns})
-receivedattackplayed_matchdays_da = xr.DataArray(receivedattackplayed_matchdays.values, dims = ('matchday', 'player'),
-                                      coords = {'matchday': receivedplayed_matchdays.index, 'player': receivedplayed_matchdays.columns})
-receiveddefenseplayed_matchdays_da = xr.DataArray(receiveddefenseplayed_matchdays.values, dims = ('matchday', 'player'),
-                                      coords = {'matchday': receivedplayed_matchdays.index, 'player': receivedplayed_matchdays.columns})
-elo_attack_matchdays_da = xr.DataArray(elo_attack_matchdays.values, dims = ('matchday', 'player'),
-                                      coords = {'matchday': elo_attack_matchdays.index, 'player': elo_attack_matchdays.columns})
-elo_defense_matchdays_da = xr.DataArray(elo_defense_matchdays.values, dims = ('matchday', 'player'),
-                                      coords = {'matchday': elo_defense_matchdays.index, 'player': elo_defense_matchdays.columns})
-
-# Combinem tots els DataArrays a un únic Dataset de xarray (cal que les coords siguin les mateixes per a tots)
-dataset = xr.Dataset({"GamesPlayed": played_matchdays_da,
-                      "PlayedAttack": playedattack_matchdays_da,
-                      "PlayedDefense": playeddefense_matchdays_da,
-                      "WinPlayed": winplayed_matchdays_da,
-                      "WinPlayedAttack": winattackplayed_matchdays_da,
-                      "WinPlayedDefense": windefenseplayed_matchdays_da,
-                      "Scored": scored_matchdays_da,
-                      "ScoredPlayed": scoredplayed_matchdays_da,
-                      "ScoredAttack": scoredattack_matchdays_da,
-                      "ScoredDefense": scoreddefense_matchdays_da,
-                      "ScoredAttackPlayed": scoredattackplayed_matchdays_da,
-                      "ScoredDefensePlayed": scoreddefenseplayed_matchdays_da,
-                      "Received": received_matchdays_da,
-                      "ReceivedPlayed": receivedplayed_matchdays_da,
-                      "ReceivedAttack": receivedattack_matchdays_da,
-                      "ReceivedDefense": receiveddefense_matchdays_da,
-                      "ReceivedAttackPlayed": receivedattackplayed_matchdays_da,
-                      "ReceivedDefensePlayed": receiveddefenseplayed_matchdays_da,
-                      "ELOAttack": elo_attack_matchdays_da,
-                      "ELODefense": elo_defense_matchdays_da})
-
-# TODO: el procés de crear el DataArray a partir del DataFrame es pot automatitzar amb una funció que faci un concat al dataframe. 
-
-
-# Afegim el càlcul dels índexs d'atac i de defensa en base al paràmetres que ja hem calculat:
-# 
-#     attack_index = goals_attack * games_attack / games_total + goals_defense * games_defense / games_total
-# 
-# També afegim el càlcul d'ELO total ponderat pel nombre de partits que ha jugat cada jugador a cada posició. Cal tenir en compte si el jugador no ha jugat cap partit. Utilitzem un nombre total de partits fals per fer el recompte. Per evitar divisions per 0, on hi havia un 0 al nombre de partits jugats hi posem un 1. El 0 de la divisió el farà el numerador.
-
-filtered_games_played = (dataset['GamesPlayed']).where(dataset['GamesPlayed'] != 0, 1)
-
-dataset['AttackIndex'] = dataset['ScoredAttack'] * dataset['PlayedAttack'] / filtered_games_played + dataset['ScoredDefense'] * dataset['PlayedDefense'] / filtered_games_played
-dataset['DefenseIndex'] = dataset['ReceivedAttack'] * dataset['PlayedAttack'] / filtered_games_played + dataset['ScoredDefense'] * dataset['PlayedDefense'] / filtered_games_played
-
-# Weighted ELO a partir del valors normalitzats min-max
-normalized_ELO_attack = (dataset['ELOAttack'] - dataset['ELOAttack'].min()) / (dataset['ELOAttack'].max() - dataset['ELOAttack'].min())
-normalized_ELO_defense = (dataset['ELODefense'] - dataset['ELODefense'].min()) / (dataset['ELODefense'].max() - dataset['ELODefense'].min())
-
-dataset['WeightedELO'] = normalized_ELO_attack * dataset['PlayedAttack'] / filtered_games_played + normalized_ELO_defense * dataset['PlayedDefense'] / filtered_games_played
-
-# Si algun jugador només ha jugat en una posició, pertorba la normalització min-max. Fem que el seu valor sigui nan
-#print(dataset['WeightedELO'].max(), dataset['WeightedELO'].min())
-dataset['WeightedELO'] = dataset['WeightedELO'].where(dataset['WeightedELO'] < 500)
-dataset['WeightedELO']
 
 
