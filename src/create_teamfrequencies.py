@@ -195,7 +195,7 @@ defense_rival_count = group['Jugador 4'].value_counts() # comptem quantes vegade
 #for a in defense_rival_count.index:
 #    print(a, a[0], a[1])
 #print(defense_rival_count.index)
-print(defense_rival_count['Pau'].loc['Víctor'])
+#print(defense_rival_count['Pau'].loc['Víctor'])
 #for opponent_name in defense_rival_count.index:
 #    count = defense_rival_count[opponent_name]
 #    print(opponent_name, count)
