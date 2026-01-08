@@ -267,7 +267,7 @@ def update_elo(results_df, parameters):
                 weighted_ELO)
 
 # Carreguem les dades
-season = 'historical' # 2,3, 4, historical
+season = '4' # 2,3, 4, historical
 if season == 'historical':
     data_df = pd.read_csv(f'../generated_files/results_{season}.csv')
 else:
@@ -493,7 +493,7 @@ ds = xr.Dataset(
 if season == 'historical':
     ds.to_netcdf('../generated_files/stats_historical.nc', mode='w')
 else:
-    ds.to_netcdf('../generated_files/stats.nc', mode='w')
+    ds.to_netcdf(f'../generated_files/stats_Season_{season}.nc', mode='w')
 
 #  ds = xr.open_dataset('stats.nc', engine ='netcdf4') # si volem obrir el fitxer
 
