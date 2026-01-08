@@ -215,6 +215,9 @@ matches = data_df.shape[0]
 # Primer partit on guanya el visitant
 first_away_win = data_df.index[data_df['Guanyador'] == 'Visitant'][0]
 
+# Primer partit on guanya el local
+first_home_win = data_df.index[data_df['Guanyador'] == 'Local'][0]
+
 # Comptem quants partits ha jugat cada participant
 all_players = data_df['Jugador 1'].tolist() + data_df['Jugador 2'].tolist() + data_df['Jugador 3'].tolist() + data_df['Jugador 4'].tolist()
 
@@ -312,6 +315,13 @@ for match in range(1, matches+1):
         except KeyError:
             windefense_match = previous_matches.groupby('Guanyador')['Jugador 3'].value_counts()['Visitant']
             winattack_match = previous_matches.groupby('Guanyador')['Jugador 4'].value_counts()['Visitant']
+    elif match < first_home_win + 1:  # pel primer partit
+        try:  # si ha guayat el local
+            windefense_match = previous_matches.groupby('Guanyador')['Jugador 1'].value_counts()['Visitant']
+            winattack_match = previous_matches.groupby('Guanyador')['Jugador 2'].value_counts()['Visitant']
+        except KeyError:
+            windefense_match = previous_matches.groupby('Guanyador')['Jugador 3'].value_counts()['Local']
+            winattack_match = previous_matches.groupby('Guanyador')['Jugador 4'].value_counts()['Local']
     else:
         windefense_local_match = previous_matches.groupby('Guanyador')['Jugador 1'].value_counts()['Local']
         winattack_local_match = previous_matches.groupby('Guanyador')['Jugador 2'].value_counts()['Local']
