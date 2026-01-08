@@ -27,24 +27,36 @@ today = datetime.today().strftime('%d/%m/%Y')
 plt.rcParams['axes.prop_cycle'] = plt.cycler(color=plt.cm.tab20.colors)
 
 # Llegim les dades
-dataarray = xr.open_dataset('../generated_files/stats.nc', engine='scipy')
+# Carreguem les dades
+season = '4' # 2,3, 4, historical
+if season == 'historical':
+    results_df = pd.read_csv(f'../generated_files/results_{season}.csv') # fitxer amb les dades dels partits
+    dataarray = xr.open_dataset(f'../generated_files/stats_{season}.nc', engine='scipy') # fitxer amb les dades de les estadístiques
+else:
+    results_df = pd.read_csv(f'../generated_files/results_Season_{season}.csv')
+    dataarray = xr.open_dataset(f'../generated_files/stats_Season_{season}.nc', engine='scipy')
 
-# Filtrem els jugadors que han jugat menys partits
+## Extraiem els dies on es canvia de temporada
+if season == 'historical':
+    season_change_days = results_df[results_df['Season'].diff() != 0].index.values.tolist() # fem la resta a la columna Season de cada element amb l'anterior per trobar a on es canvia de temporada
+
+## Filtrem els jugadors que han jugat menys partits
 
 # Create a dataaray with the coordinates of the dimension to remove ('player')
-last_games_played = dataarray['GamesPlayed'].isel(matchday=-1) # list of the number of games played by each player
+last_games_played = dataarray['GamesPlayed'].isel(match=-1) # list of the number of games played by each player
 minimum_games = last_games_played.max()* 0.2 # minimum of 20% of the plyer that has played the most matches
 mask = xr.DataArray(last_games_played > minimum_games, dims = 'player', coords = {'player':dataarray.player})
 
 # Filter out players
 dataarray = dataarray.where(mask, drop=True)
 
+## Extraiem diferents paràmetres
 # Extreiem els noms dels jugadors i les jornades
 players_names = dataarray['player'].astype(str).values # noms dels jugadors
-matchdays = dataarray['matchday'] # array de números de jornades
+matchdays = dataarray['match'] # array de números de jornades
 
 # Extreiem els valors de victòries / jugats de l'última jornada
-winplayed_values = dataarray['WinPlayed'].isel(matchday = -1).values
+winplayed_values = dataarray['WinPlayed'].isel(match = -1).values
 
 # Ordenem de major a menor
 winplayed_sorted_idx = np.argsort(winplayed_values)[::-1] # índexs d'ordre (revertim per fer de major a menor)
@@ -77,9 +89,9 @@ def plot_matchday_evolution(parameter, title, ax, label=False):
             parameter_evolution_values = np.where(parameter_evolution_values == 0, 1000, parameter_evolution_values)
 
         if label:
-            ax.plot(matchdays, parameter_evolution_values, marker = 'o', label=player) #plot
+            ax.plot(matchdays, parameter_evolution_values, label=player) #plot
         else:
-            ax.plot(matchdays, parameter_evolution_values, marker = 'o') #plot sense label
+            ax.plot(matchdays, parameter_evolution_values) #plot sense label
 
         # Add player label
         #ax.text(matchdays[-1]+1, parameter_evolution_values[-1], player, ha='left', va='center')
@@ -117,6 +129,12 @@ for i in range(len(axs)):
 for i in [-1, -2]:
     axs[i].set_xlabel('Matchday')
 
+# Línies verticals que marquen els canvis de temporada
+if season == 'historical':
+    for i in range(3):
+        for day in season_change_days[1:]:
+            axs[i].axvline(x=day, color='gray', linestyle='--', linewidth=1.5, alpha = 0.8)
+
 fig.legend(bbox_to_anchor = ( 0.5, 0.9), ncol = 5, loc = 'lower center')
 
 # Afegim l'etiqueta del dia d'avui
@@ -124,7 +142,12 @@ fig.text(0.75, 0.91, f"Last updated: {today}", transform=fig.transFigure)
 
 # Guardem la figura per poderla posar al README
 plt.subplots_adjust(hspace=0.2)
-plt.savefig('../results/winplayed_stats.png', dpi=300, bbox_inches='tight')
+
+if season == 'historical':
+    output_name = 'winplayed_stats_historical.png'
+else:
+    output_name = 'winplayed_stats_season_' + season + '.png'
+plt.savefig('../results/'+output_name, dpi=300, bbox_inches='tight')
 
 
 # ### Plot ELO
@@ -133,7 +156,7 @@ plt.savefig('../results/winplayed_stats.png', dpi=300, bbox_inches='tight')
 
 def plot_standings_table(parameter, title, ax):
     # Extreiem els valors de victòries / jugats de l'última jornada
-    parameter_values = dataarray[parameter].isel(matchday = -1).values
+    parameter_values = dataarray[parameter].isel(match = -1).values
 
     # Ordenem de major a menor
     parameter_sorted_idx = np.argsort(parameter_values)[::-1] # índexs d'ordre (revertim per fer de major a menor)
@@ -173,7 +196,13 @@ for i in range(len(axs)):
     axs[i].set_xlim(-0.5, matchdays[-1]+0.5)
 
 for i in [-1, -2]:
-    axs[i].set_xlabel('Matchday')
+    axs[i].set_xlabel('Match')
+
+# Línies verticals que marquen els canvis de temporada
+if season == 'historical':
+    for i in range(3):
+        for day in season_change_days[1:]:
+            axs[i].axvline(x=day, color='gray', linestyle='--', linewidth=1.5, alpha = 0.8)
 
 # Llegenda
 fig.legend(bbox_to_anchor = ( 0.5, 0.9), ncol = 5, loc = 'lower center')
@@ -186,7 +215,11 @@ fig.text(0.91, 0.91, f"Last updated: {today}", transform=fig.transFigure)
 
 # Guardem la figura per poderla posar al README
 plt.subplots_adjust(hspace=0.2)
-plt.savefig('../results/ELO_stats.png', dpi=300, bbox_inches='tight')
+if season == 'historical':
+    output_name = 'ELO_stats_historical.png'
+else:
+    output_name = 'ELO_stats_season_' + season + '.png'
+plt.savefig('../results/'+output_name, dpi=300, bbox_inches='tight')
 
 # # Scatter plots
 # Aquests gràfics en permeten comparar paràmetres de jugadors directament els uns amb els altres.
@@ -196,20 +229,20 @@ fig, axs = plt.subplots(ncols=2, nrows=2, figsize=(10,10))
 axs = axs.flatten()
 
 # Gràfic de gols atacans/partit i gols equip/partit per veure quin jugador contribueix més a l'atac de l'equip. Com menys gols marqui però més alt sigui el % de victòries vol dir que l'atacant depèn molt dels gols del defensor. La línia recta és la relació 1:3
-axs[0].scatter(dataarray.ScoredAttackPlayed.isel(matchday=-1), dataarray.WinPlayedAttack.isel(matchday=-1))
+axs[0].scatter(dataarray.ScoredAttackPlayed.isel(match=-1), dataarray.WinAttackPlayed.isel(match=-1))
 axs[0].set_xlabel("Scored goals in attack / games played in attack")
 axs[0].set_ylabel("Games won in attack / games played in attack")
 
-axs[1].scatter(dataarray.ScoredDefensePlayed.isel(matchday=-1), dataarray.WinPlayedDefense.isel(matchday=-1))
+axs[1].scatter(dataarray.ScoredDefensePlayed.isel(match=-1), dataarray.WinDefensePlayed.isel(match=-1))
 axs[1].set_xlabel("Scored goals in defense / games played in defense")
 axs[1].set_ylabel("Games won in defense / games played in defense")
 
 
-axs[2].scatter(dataarray.ReceivedAttackPlayed.isel(matchday=-1), dataarray.WinPlayedAttack.isel(matchday=-1))
+axs[2].scatter(dataarray.ReceivedAttackPlayed.isel(match=-1), dataarray.WinAttackPlayed.isel(match=-1))
 axs[2].set_xlabel("Received goals in attack / games played in attack")
 axs[2].set_ylabel("Games won in attack / games played in attack")
 
-axs[3].scatter(dataarray.ReceivedDefensePlayed.isel(matchday=-1), dataarray.WinPlayedDefense.isel(matchday=-1))
+axs[3].scatter(dataarray.ReceivedDefensePlayed.isel(match=-1), dataarray.WinDefensePlayed.isel(match=-1))
 axs[3].set_xlabel("Received goals in defense / games played in defense")
 axs[3].set_ylabel("Games won in defense / games played in defense")
 
