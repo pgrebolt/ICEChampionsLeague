@@ -17,7 +17,7 @@ import pandas as pd
 import xarray as xr # per guardar les dades 3D
 
 # Carreguem les dades
-season = '4' # 2,3, 4, historical
+season = '5' # 2,3, 4, historical
 if season == 'historical':
     data_df = pd.read_csv(f'../generated_files/results_{season}.csv')
 else:
