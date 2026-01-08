@@ -21,82 +21,15 @@ from sklearn.preprocessing import StandardScaler
 # Definim tab20 com la paleta per defecte dels plots
 plt.rcParams['axes.prop_cycle'] = plt.cycler(color=plt.cm.tab20.colors)
 
-# Actualitzem els ELO a cada partit
-#for nmatch in range(matches):
-
-#    match_df = data_df.iloc[nmatch].reset_index()
-
-    # Noms dels jugadors
-#    j1_name, j2_name, j3_name, j4_name = match_df['Jugador 1'].values[0], match_df['Jugador 2'].values[0], match_df['Jugador 3'].values[0], match_df['Jugador 4'].values[0]
-
-    # Nombre de partits jugats com a atacant o com a defensa (el +1 serveix per facilitar el càlcul posterior i indica que en el partit actual també es guanya experiència)
-     #    n1_played = playeddefense_matches.iloc[nmatch][j1_name].values[0] +1 # TODO: fer que playeddefense_matches tingui una columna d'índex de partit, per poder quadrar ara (igual pels altres dataframes)
-     #    n2_played = playedattack_matchdays[playedattack_matchdays.index == nmatchday][j2_name].values[0] +1
-     #    n3_played = playeddefense_matchdays[playeddefense_matchdays.index == nmatchday][j3_name].values[0] +1
-     #    n4_played = playedattack_matchdays[playedattack_matchdays.index == nmatchday][j4_name].values[0] +1
-
-    # ELO mitjà per equip
-     #    ELO_local = (elo_rating_defense[j1_name]*n1_played + elo_rating_attack[j2_name]*n2_played) / (n1_played + n2_played)
-     #    ELO_visitant = (elo_rating_defense[j3_name]*n3_played + elo_rating_attack[j4_name]*n4_played) / (n3_played + n4_played)
-
-    # Probabilitats de victòria
-     #    P_local = 1 / (1 + 10**((ELO_visitant - ELO_local) / 400))
-     #    P_visitant = 1 / (1 + 10**((ELO_local - ELO_visitant) / 400))
-
-    # Outcome segons local (1 si guanya local, 0 si guanya visitant)
-     #    guanyador = match_df['Guanyador'].values[0]
-     #    outcome_local = 1 if (guanyador=='Local') else 0
-     #    outcome_visitant = 1 if (guanyador=='Visitant') else 0
-
-    # Paràmetres de ponderació
-     #    mu, lamb = 0.3, 0.7
-
-    # Gols que ha rebut cada equip
-     #    gols_rebuts_local = match_df['Gols 3'].values[0] + match_df['Gols 4'].values[0]
-     #    gols_rebuts_visitant = match_df['Gols 1'].values[0] + match_df['Gols 2'].values[0]
-
-    # Rendiment sobre la contribució al partit segons posició
-     #    r_p1 = lamb * (1 - gols_rebuts_local / 3) + mu * (match_df['Gols 1'].values[0] / 3) # defensa
-     #    r_p2 = mu * (1 - gols_rebuts_local / 3) + lamb * (match_df['Gols 2'].values[0] / 3) # atac
-     #    r_p3 = lamb * (1 - gols_rebuts_visitant / 3) + mu * (match_df['Gols 3'].values[0] / 3)  # defensa
-     #    r_p4 = mu * (1 - gols_rebuts_visitant / 3) + lamb * (match_df['Gols 4'].values[0] / 3) # atac
-
-    # Imposem un rendiment mínim de 0.1
-     #    r_p1 = max(r_p1, 0.1)
-     #    r_p2 = max(r_p2, 0.1)
-     #    r_p3 = max(r_p3, 0.1)
-     #    r_p4 = max(r_p4, 0.1)
-
-    # Suma dels rendiments
-     #    r_local = r_p1 + r_p2
-     #    r_visitant = r_p3 + r_p4
-
-    # Actualitzem la ponderació de rendiment pels perdedors
-     #    if guanyador == 'Local':
-     #        r_p3 = 1 - r_p3
-     #        r_p4 = 1 - r_p4
-
-        # Imposem el rendiment mínim
-     #        r_p3 = min(r_p3, 0.9)
-     #        r_p4 = min(r_p4, 0.9)
-
-     #        r_visitant = r_p3 + r_p4
-     #    elif guanyador == 'Visitant':
-     #        r_p1 = 1 - r_p1
-     #        r_p2 = 1 - r_p2
-
-     #        # Imposem el rendiment mínim
-     #        r_p1 = min(r_p1, 0.9)
-     #        r_p2 = min(r_p2, 0.9)
-
-     #        r_local = r_p1 + r_p2
-
-    # Actualitzem ELOS
-     #    elo_rating_defense[j1_name] = elo_rating_defense[j1_name] + K * (outcome_local - P_local) * r_p1 / r_local
-     #    elo_rating_attack[j2_name] = elo_rating_attack[j2_name] + K * (outcome_local - P_local) * r_p2 / r_local
-     #    elo_rating_defense[j3_name] = elo_rating_defense[j3_name] + K * (outcome_visitant - P_visitant) * r_p3 / r_visitant
-     #    elo_rating_attack[j4_name] = elo_rating_attack[j4_name] + K * (outcome_visitant - P_visitant) * r_p4 / r_visitant
-
+# Carreguem les dades
+season = '5' # 2,3, 4, historical
+if season == 'historical':
+    data_df = pd.read_csv(f'../generated_files/results_{season}.csv')
+else:
+    data_df = pd.read_csv(f'../generated_files/results_Season_{season}.csv')
+#data_df = pd.read_csv(f'../generated_files/results_prova.csv')
+# Emplenem els espais en blanc amb 0
+data_df = data_df.fillna(0.)
 
 # Funció per actualitzar l'ELO després de cada partit
 def update_elo(results_df, parameters):
@@ -266,15 +199,6 @@ def update_elo(results_df, parameters):
                 {players_names[player_index]: parameters['ELOAttack'][-1][player_index] for player_index in range(len(players_names))},
                 weighted_ELO)
 
-# Carreguem les dades
-season = '4' # 2,3, 4, historical
-if season == 'historical':
-    data_df = pd.read_csv(f'../generated_files/results_{season}.csv')
-else:
-    data_df = pd.read_csv(f'../generated_files/results_Season_{season}.csv')
-#data_df = pd.read_csv(f'../generated_files/results_prova.csv')
-# Emplenem els espais en blanc amb 0
-data_df = data_df.fillna(0.)
 
 # Obtenim una llista amb tots els noms dels participants
 players_names = np.unique(data_df[['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4']].values.flatten())
