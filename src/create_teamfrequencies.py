@@ -351,7 +351,7 @@ dataset = xr.Dataset({"Teammates": mates_da,
 if season == 'historical':
     dataset.to_netcdf('../generated_files/teammates_historical.nc', mode='w')
 else:
-    dataset.to_netcdf('../generated_files/teammates.nc', mode='w')
+    dataset.to_netcdf(f'../generated_files/teammates_Season_{season}.nc', mode='w')
 
 print("Frequencies saved successfully!")
 
