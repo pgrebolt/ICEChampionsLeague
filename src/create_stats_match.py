@@ -22,7 +22,7 @@ from sklearn.preprocessing import StandardScaler
 plt.rcParams['axes.prop_cycle'] = plt.cycler(color=plt.cm.tab20.colors)
 
 # Carreguem les dades
-season = '5' # 2,3, 4, historical
+season = 'historical' # 2,3, 4, historical
 if season == 'historical':
     data_df = pd.read_csv(f'../generated_files/results_{season}.csv')
 else:
@@ -228,6 +228,7 @@ games_count = dict(Counter(all_players))
 params = [
     "GamesPlayed", "PlayedAttack", "PlayedDefense",
     "WinPlayed", "WinAttackPlayed", "WinDefensePlayed",
+    "WinPlayedMatchday",
     "Scored", "ScoredPlayed", "ScoredAttack", "ScoredDefense",
     "ScoredAttackPlayed", "ScoredDefensePlayed",
     "Received", "ReceivedPlayed", "ReceivedAttack", "ReceivedDefense",
@@ -266,7 +267,7 @@ played_j4 = {player: 0 for player in players_names}
 for match in range(1, matches+1):
     previous_matches = data_df.iloc[:match] # dataframe amb tots els partits previs
 
-    # Recompte de partits jugats per cada jugador
+    ## Recompte de partits jugats per cada jugador
     played_j1_match = previous_matches.groupby('Jugador 1').size()
     played_j3_match = previous_matches.groupby('Jugador 3').size()
     playeddefense_match = {player: played_j1_match.get(player, 0) + played_j3_match.get(player, 0) for player in players_names}
@@ -276,8 +277,31 @@ for match in range(1, matches+1):
     played_j4_match = previous_matches.groupby('Jugador 4').size()
     playedattack_match = {k: played_j2_match.get(k, 0) + played_j4_match.get(k, 0) for k in players_names}
 
-    players_so_far = list(set(list(playedattack_match.keys()) + list(playeddefense_match.keys()))) # llista de tots els jugadors que han jugat fins ara (en qualsevol posició)
     played = {k: playeddefense_match.get(k, 0) + playedattack_match.get(k, 0) for k in players_names}
+
+    ## Recompte de partits guanyats en aquest matchday
+    matchday = previous_matches.iloc[-1]['D'] if season != 'historical' else previous_matches.iloc[-1]['Total_D']
+    previous_matches_matchday = previous_matches[previous_matches['D'] == matchday] if season != 'historical' else previous_matches[previous_matches['Total_D'] == matchday]
+    win_local_j1 = previous_matches_matchday[previous_matches_matchday['Guanyador'] == 'Local'].groupby(
+        'Jugador 1').size()
+    win_local_j2 = previous_matches_matchday[previous_matches_matchday['Guanyador'] == 'Local'].groupby(
+        'Jugador 2').size()
+    win_visitant_j3 = previous_matches_matchday[previous_matches_matchday['Guanyador'] == 'Visitant'].groupby(
+        'Jugador 3').size()
+    win_visitant_j4 = previous_matches_matchday[previous_matches_matchday['Guanyador'] == 'Visitant'].groupby(
+        'Jugador 4').size()
+    played_j1_matchday = previous_matches_matchday.groupby('Jugador 1').size()
+    played_j3_matchday = previous_matches_matchday.groupby('Jugador 3').size()
+    played_j2_matchday = previous_matches_matchday.groupby('Jugador 2').size()
+    played_j4_matchday = previous_matches_matchday.groupby('Jugador 4').size()
+
+    playeddefense_matchday = {k: played_j1_matchday.get(k, 0) + played_j3_matchday.get(k, 0) for k in players_names}
+    playedattack_matchday = {k: played_j2_matchday.get(k, 0) + played_j4_matchday.get(k, 0) for k in players_names}
+    played_matchday = {k: playeddefense_matchday.get(k, 0) + playedattack_matchday.get(k, 0) for k in players_names}
+
+    winplayed_matchday = {p: ((win_local_j1.get(p, 0) + win_local_j2.get(p, 0) + win_visitant_j3.get(p, 0) + win_visitant_j4.get(p,0))
+                              / (played_matchday.get(p, 0))) if played_matchday.get(p,0) != 0 else 0
+                          for p in players_names}
 
     ## Recompte de gols anotats
     # Com a defensor
@@ -362,6 +386,7 @@ for match in range(1, matches+1):
     _acc["PlayedAttack"].append(_dict_to_row(playedattack_match, players_names))
     _acc["PlayedDefense"].append(_dict_to_row(playeddefense_match, players_names))
     _acc["WinPlayed"].append(_dict_to_row(winplayed_match, players_names))
+    _acc["WinPlayedMatchday"].append(_dict_to_row(winplayed_matchday, players_names))
     _acc["WinAttackPlayed"].append(_dict_to_row(winattackplayed_match, players_names))
     _acc["WinDefensePlayed"].append(_dict_to_row(windefenseplayed_match, players_names))
 

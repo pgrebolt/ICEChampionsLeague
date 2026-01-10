@@ -61,13 +61,12 @@ player_codes_dict = {players_names[i]: player_codes[i] for i in range(len(player
 # Seguidament construïm la matriu `X` que conté les dades dels jugadors al camp. Primer definim quins paràmetres tenim en compte pels atacants i pels defensors. Després, construïm la matriu on, fila per fila, hi ha tots els paràmetres dels jugadors.
 
 # Paràmetres que considerem al model, en funció de si el jugador és atacant o defensor
-considered_stats_defense = ['WinDefensePlayed', 'ScoredDefensePlayed', 'ReceivedDefensePlayed', 'ELODefense']
-considered_stats_attack = ['WinAttackPlayed', 'ScoredAttackPlayed', 'ReceivedAttackPlayed', 'ELOAttack']
-considered_stats_teams = ['ELOAttackDifference', 'ELODefenseDifference', 'ELOAttackDefeseDifference',
+considered_stats_defense = ['WinDefensePlayed', 'ScoredDefensePlayed', 'ReceivedDefensePlayed', 'WinPlayedMatchday']
+considered_stats_attack = ['WinAttackPlayed', 'ScoredAttackPlayed', 'ReceivedAttackPlayed', 'WinPlayedMatchday']
+considered_stats_teams = ['ELOAttackDifference', 'ELODefenseDifference', 'ELOAttackDefenseDifference',
                           'ELODefenseAttackDifference', 'CloseWinsLocal',
                           'CloseWinsVisitant', 'ReceivedGoalsDDLocal', 'ReceivedGoalsDDVisitant',
-                          'ReceivedGoalsADLocal', 'ReceivedGoalsADVisitant', 'WinsLocal', 'WinsVisitant',
-                          'Player1Code', 'Player2Code', 'Player3Code', 'Player4Code']
+                          'ReceivedGoalsADLocal', 'ReceivedGoalsADVisitant', 'WinsLocal', 'WinsVisitant']
 
 ## Creem el training set
 # Dataframe on hi desem tots els paràmetres d'avaluació de cada jugador
@@ -118,9 +117,9 @@ for match in range(1, matches_df.shape[0]+1): # per cada partit disputat
                                  team_wins_local, team_wins_visitant]
 
     # Afegim el codi numèric de cada jugador
-    player_codes_match = [player_codes_dict[match_df['Jugador 1']], player_codes_dict[match_df['Jugador 2']],
-                          player_codes_dict[match_df['Jugador 3']], player_codes_dict[match_df['Jugador 4']]]
-    stats_match = player_codes_match + stats_match
+    #player_codes_match = [player_codes_dict[match_df['Jugador 1']], player_codes_dict[match_df['Jugador 2']],
+    #                      player_codes_dict[match_df['Jugador 3']], player_codes_dict[match_df['Jugador 4']]]
+    #stats_match = player_codes_match + stats_match
 
     # Desem la llista d'estadístiques d'aquest partit
     Stats_training.loc[len(Stats_training)] = stats_match
