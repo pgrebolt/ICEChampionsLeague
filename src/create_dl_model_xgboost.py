@@ -63,7 +63,8 @@ player_codes_dict = {players_names[i]: player_codes[i] for i in range(len(player
 # Paràmetres que considerem al model, en funció de si el jugador és atacant o defensor
 considered_stats_defense = ['WinDefensePlayed', 'ScoredDefensePlayed', 'ReceivedDefensePlayed', 'ELODefense']
 considered_stats_attack = ['WinAttackPlayed', 'ScoredAttackPlayed', 'ReceivedAttackPlayed', 'ELOAttack']
-considered_stats_teams = ['ELOAttackDifference', 'ELODefenseDifference', 'CloseWinsLocal',
+considered_stats_teams = ['ELOAttackDifference', 'ELODefenseDifference', 'ELOAttackDefeseDifference',
+                          'ELODefenseAttackDifference', 'CloseWinsLocal',
                           'CloseWinsVisitant', 'ReceivedGoalsDDLocal', 'ReceivedGoalsDDVisitant',
                           'ReceivedGoalsADLocal', 'ReceivedGoalsADVisitant', 'WinsLocal', 'WinsVisitant',
                           'Player1Code', 'Player2Code', 'Player3Code', 'Player4Code']
@@ -98,6 +99,10 @@ for match in range(1, matches_df.shape[0]+1): # per cada partit disputat
                              stats_xr.sel(match=match, player=match_df['Jugador 4'])['ELOAttack'].values.item())
     elo_defense_difference = (stats_xr.sel(match=match, player=match_df['Jugador 1'])['ELOAttack'].values.item() -
                              stats_xr.sel(match=match, player=match_df['Jugador 3'])['ELOAttack'].values.item())
+    elo_attackh_defensea_difference = (stats_xr.sel(match=match, player=match_df['Jugador 2'])['ELOAttack'].values.item() -
+                              stats_xr.sel(match=match, player=match_df['Jugador 3'])['ELODefense'].values.item()) # diferència ELO atacant-defensor rivals
+    elo_defenseh_attacka_difference = (stats_xr.sel(match=match, player=match_df['Jugador 1'])['ELODefense'].values.item() -
+                              stats_xr.sel(match=match, player=match_df['Jugador 4'])['ELOAttack'].values.item())
     close_wins_local = frequencies_xr.sel(teammate=match_df['Jugador 1'], player = match_df['Jugador 2'])['CloseWinsPlayed'].values.item()
     close_wins_visitant = frequencies_xr.sel(teammate=match_df['Jugador 1'], player = match_df['Jugador 2'])['CloseWinsPlayed'].values.item()
     receivedgoals_defense_defense_local = frequencies_xr.sel(defender = match_df['Jugador 1'], defender_rival = match_df['Jugador 3'])['ReceivedGoalsGamesDefenseDefense'].values.item()
@@ -106,7 +111,8 @@ for match in range(1, matches_df.shape[0]+1): # per cada partit disputat
     receivedgoals_attack_defense_visitant = frequencies_xr.sel(defender = match_df['Jugador 3'], attacker_rival = match_df['Jugador 2'])['ReceivedGoalsGamesAttackDefense'].values.item()
     team_wins_local = frequencies_xr.sel(teammate = match_df['Jugador 1'], player = match_df['Jugador 2'])['TeammatesWinsPlayed'].values.item()
     team_wins_visitant = frequencies_xr.sel(teammate = match_df['Jugador 3'], player = match_df['Jugador 4'])['TeammatesWinsPlayed'].values.item()
-    stats_match = stats_match + [elo_attack_difference, elo_defense_difference, close_wins_local, close_wins_visitant,
+    stats_match = stats_match + [elo_attack_difference, elo_defense_difference, elo_attackh_defensea_difference, elo_defenseh_attacka_difference,
+                                 close_wins_local, close_wins_visitant,
                                  receivedgoals_defense_defense_local, receivedgoals_defense_defense_visitant,
                                  receivedgoals_attack_defense_local, receivedgoals_attack_defense_visitant,
                                  team_wins_local, team_wins_visitant]
@@ -199,17 +205,21 @@ y_pred = best.predict(X_test)
 print("Best params:", search.best_params_)
 print(classification_report(y_winning_test, y_pred))
 ConfusionMatrixDisplay.from_predictions(y_winning_test, y_pred)
-plt.savefig('Confusion_Matrix_Test.png', dpi=300, bbox_inches='tight')
+plt.savefig('../results/Confusion_Matrix_Test.png', dpi=300, bbox_inches='tight')
 plt.clf()
 
 # 7) Save model and scaler
-joblib.dump(best, 'xgb_best_pipeline.joblib')
+#joblib.dump(best, '../generated_files/xgb_best_pipeline.joblib')
 
 # 8) SHAP summary (explain top features)
-explainer = shap.Explainer(best.named_steps["clf"])
-shap_values = explainer(best.named_steps["scaler"].transform(X_train))
-shap.summary_plot(shap_values, best.named_steps["scaler"].transform(X_train), show=False)
-plt.savefig('shap_summary.png', dpi=300, bbox_inches='tight')
+feature_names = Stats_training.columns.tolist()
+X_shap = pd.DataFrame(best.named_steps["scaler"].transform(X_train), columns=feature_names)
+explainer = shap.Explainer(best.named_steps["clf"], X_shap)
+shap_exp = explainer(X_shap)  # Explanation object
+
+# Plot and save (feature names will appear because X_shap is a DataFrame)
+shap.summary_plot(shap_exp.values, X_shap, show=False)
+plt.savefig('../results/shap_summary.png', dpi=300, bbox_inches='tight')
 plt.clf()
 
 #pred_labels = probs.argmax(axis=0)
