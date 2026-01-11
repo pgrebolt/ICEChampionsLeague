@@ -101,8 +101,8 @@ for match in range(1, matches_df.shape[0]+1): # per cada partit disputat
     # Afegim a la llista paràmetres del partit, creuant els dos equips
     elo_attack_difference = (stats_xr.sel(match=match, player=match_df['Jugador 2'])['ELOAttack'].values.item() -
                              stats_xr.sel(match=match, player=match_df['Jugador 4'])['ELOAttack'].values.item())
-    elo_defense_difference = (stats_xr.sel(match=match, player=match_df['Jugador 1'])['ELOAttack'].values.item() -
-                             stats_xr.sel(match=match, player=match_df['Jugador 3'])['ELOAttack'].values.item())
+    elo_defense_difference = (stats_xr.sel(match=match, player=match_df['Jugador 1'])['ELODefense'].values.item() -
+                             stats_xr.sel(match=match, player=match_df['Jugador 3'])['ELODefense'].values.item())
     elo_attackh_defensea_difference = (stats_xr.sel(match=match, player=match_df['Jugador 2'])['ELOAttack'].values.item() -
                               stats_xr.sel(match=match, player=match_df['Jugador 3'])['ELODefense'].values.item()) # diferència ELO atacant-defensor rivals
     elo_defenseh_attacka_difference = (stats_xr.sel(match=match, player=match_df['Jugador 1'])['ELODefense'].values.item() -
