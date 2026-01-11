@@ -17,7 +17,7 @@ import pandas as pd
 import xarray as xr # per guardar les dades 3D
 
 # Carreguem les dades
-season = '5' # 2,3, 4, historical
+season = 'historical' # 2,3, 4, historical
 if season == 'historical':
     data_df = pd.read_csv(f'../generated_files/results_{season}.csv')
 else:
@@ -32,7 +32,7 @@ if season == 'historical':
 else:
     dataarray = xr.open_dataset('../generated_files/stats.nc', engine='scipy') # cal que quadri la season d'aquest codi amb la del fitxer!
 
-played_games = dataarray['GamesPlayed'].isel(matchday=-1)
+played_games = dataarray['GamesPlayed'].isel(match=-1)
 
 # Obtenim una llista amb tots els noms dels participants
 players_names = np.unique(data_df[['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4']].values.flatten())
