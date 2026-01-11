@@ -61,12 +61,17 @@ player_codes_dict = {players_names[i]: player_codes[i] for i in range(len(player
 # Seguidament construïm la matriu `X` que conté les dades dels jugadors al camp. Primer definim quins paràmetres tenim en compte pels atacants i pels defensors. Després, construïm la matriu on, fila per fila, hi ha tots els paràmetres dels jugadors.
 
 # Paràmetres que considerem al model, en funció de si el jugador és atacant o defensor
-considered_stats_defense = ['WinDefensePlayed', 'ScoredDefensePlayed', 'ReceivedDefensePlayed', 'WinPlayedMatchday']
-considered_stats_attack = ['WinAttackPlayed', 'ScoredAttackPlayed', 'ReceivedAttackPlayed', 'WinPlayedMatchday']
-considered_stats_teams = ['ELOAttackDifference', 'ELODefenseDifference', 'ELOAttackDefenseDifference',
-                          'ELODefenseAttackDifference', 'CloseWinsLocal',
-                          'CloseWinsVisitant', 'ReceivedGoalsDDLocal', 'ReceivedGoalsDDVisitant',
-                          'ReceivedGoalsADLocal', 'ReceivedGoalsADVisitant', 'WinsLocal', 'WinsVisitant']
+#considered_stats_defense = ['WinDefensePlayed', 'ScoredDefensePlayed', 'ReceivedDefensePlayed', 'WinPlayedMatchday']
+#considered_stats_attack = ['WinAttackPlayed', 'ScoredAttackPlayed', 'ReceivedAttackPlayed', 'WinPlayedMatchday']
+#considered_stats_teams = ['ELOAttackDifference', 'ELODefenseDifference', 'ELOAttackDefenseDifference',
+#                          'ELODefenseAttackDifference', 'CloseWinsLocal',
+#                          'CloseWinsVisitant', 'ReceivedGoalsDDLocal', 'ReceivedGoalsDDVisitant',
+#                          'ReceivedGoalsADLocal', 'ReceivedGoalsADVisitant', 'WinsLocal', 'WinsVisitant']
+considered_stats_defense = ['WinDefensePlayed', 'WinPlayedMatchday']
+considered_stats_attack = ['WinAttackPlayed', 'WinPlayedMatchday']
+considered_stats_teams = ['ELOAttackDefenseDifference',
+                          'ELODefenseAttackDifference',
+                          'WinsLocal', 'WinsVisitant']
 
 ## Creem el training set
 # Dataframe on hi desem tots els paràmetres d'avaluació de cada jugador
@@ -110,11 +115,13 @@ for match in range(1, matches_df.shape[0]+1): # per cada partit disputat
     receivedgoals_attack_defense_visitant = frequencies_xr.sel(defender = match_df['Jugador 3'], attacker_rival = match_df['Jugador 2'])['ReceivedGoalsGamesAttackDefense'].values.item()
     team_wins_local = frequencies_xr.sel(teammate = match_df['Jugador 1'], player = match_df['Jugador 2'])['TeammatesWinsPlayed'].values.item()
     team_wins_visitant = frequencies_xr.sel(teammate = match_df['Jugador 3'], player = match_df['Jugador 4'])['TeammatesWinsPlayed'].values.item()
-    stats_match = stats_match + [elo_attack_difference, elo_defense_difference, elo_attackh_defensea_difference, elo_defenseh_attacka_difference,
-                                 close_wins_local, close_wins_visitant,
-                                 receivedgoals_defense_defense_local, receivedgoals_defense_defense_visitant,
-                                 receivedgoals_attack_defense_local, receivedgoals_attack_defense_visitant,
-                                 team_wins_local, team_wins_visitant]
+#    stats_match = stats_match + [elo_attack_difference, elo_defense_difference, elo_attackh_defensea_difference, elo_defenseh_attacka_difference,
+#                                 close_wins_local, close_wins_visitant,
+#                                 receivedgoals_defense_defense_local, receivedgoals_defense_defense_visitant,
+#                                 receivedgoals_attack_defense_local, receivedgoals_attack_defense_visitant,
+#                                 team_wins_local, team_wins_visitant]
+    stats_match = stats_match + [elo_attackh_defensea_difference, elo_defenseh_attacka_difference,
+                                     team_wins_local, team_wins_visitant]
 
     # Afegim el codi numèric de cada jugador
     #player_codes_match = [player_codes_dict[match_df['Jugador 1']], player_codes_dict[match_df['Jugador 2']],
@@ -204,11 +211,11 @@ y_pred = best.predict(X_test)
 print("Best params:", search.best_params_)
 print(classification_report(y_winning_test, y_pred))
 ConfusionMatrixDisplay.from_predictions(y_winning_test, y_pred)
-plt.savefig('../results/Confusion_Matrix_Test.png', dpi=300, bbox_inches='tight')
+plt.savefig('../results/Confusion_Matrix_Test_winning.png', dpi=300, bbox_inches='tight')
 plt.clf()
 
 # 7) Save model and scaler
-#joblib.dump(best, '../generated_files/xgb_best_pipeline.joblib')
+joblib.dump(best, '../generated_files/xgb_winning_best_pipeline.joblib')
 
 # 8) SHAP summary (explain top features)
 feature_names = Stats_training.columns.tolist()
@@ -218,7 +225,7 @@ shap_exp = explainer(X_shap)  # Explanation object
 
 # Plot and save (feature names will appear because X_shap is a DataFrame)
 shap.summary_plot(shap_exp.values, X_shap, show=False)
-plt.savefig('../results/shap_summary.png', dpi=300, bbox_inches='tight')
+plt.savefig('../results/shap_summary_winning.png', dpi=300, bbox_inches='tight')
 plt.clf()
 
 #pred_labels = probs.argmax(axis=0)
