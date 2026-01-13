@@ -19,8 +19,11 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 
 # Llegim les estadístiques de cada jugador
-stats_xr = xr.open_dataset('../generated_files/stats.nc', engine='scipy')
-last_mach = stats_xr['match'].values[-1]
+stats_xr = xr.open_dataset('../generated_files/stats_historical.nc', engine='scipy')
+last_mach = stats_xr['match'].max().item()
+
+# Llegim les estadístiques creuades (com un jugador es comporta contra un altre)
+frequencies_xr = xr.open_dataset('../generated_files/teammates_historical.nc', engine='scipy')
 
 # Llegim l'scaler
 scaler = joblib.load('../generated_files/scaler.pkl')
@@ -39,6 +42,9 @@ pipeline = joblib.load('../generated_files/xgb_winning_best_pipeline.joblib')
 # Jugadors, per alineació
 player_list = ['Víctor', 'Antía', 'Guille', 'Luis']
 
+# Creem la taula on desarem les estadístiques per fer la predicció
+Stats_predicting = pd.DataFrame(columns=considered_stats_defense+considered_stats_attack+considered_stats_teams)
+
 # Creem la llista d'estadístiques per fer la predicció
 stats_match = []
 for player in player_list:
@@ -55,30 +61,30 @@ for player in player_list:
                              stats_xr.sel(match=last_match, player=player_list[3])['ELOAttack'].values.item())
     elo_defense_difference = (stats_xr.sel(match=last_match, player=player_list[0])['ELOAttack'].values.item() -
                               stats_xr.sel(match=last_match, player=player_list[2])['ELOAttack'].values.item())
-    elo_attackh_defensea_difference = (stats_xr.sel(match=match, player=match_df['Jugador 2'])['ELOAttack'].values.item() -
-                                       stats_xr.sel(match=match, player=match_df['Jugador 3'])[
+    elo_attackh_defensea_difference = (stats_xr.sel(match=last_match, player=player_list[1])['ELOAttack'].values.item() -
+                                       stats_xr.sel(match=last_match, player=player_list[2])[
                                            'ELODefense'].values.item())  # diferència ELO atacant-defensor rivals
-    elo_defenseh_attacka_difference = (stats_xr.sel(match=match, player=match_df['Jugador 1'])['ELODefense'].values.item() -
-                                       stats_xr.sel(match=match, player=match_df['Jugador 4'])['ELOAttack'].values.item())
-    close_wins_local = frequencies_xr.sel(teammate=match_df['Jugador 1'], player=match_df['Jugador 2'])[
+    elo_defenseh_attacka_difference = (stats_xr.sel(match=last_match, player=player_list[0])['ELODefense'].values.item() -
+                                       stats_xr.sel(match=last_match, player=player_list[3])['ELOAttack'].values.item())
+    close_wins_local = frequencies_xr.sel(teammate=player_list[0], player=player_list[1])[
         'CloseWinsPlayed'].values.item()
-    close_wins_visitant = frequencies_xr.sel(teammate=match_df['Jugador 1'], player=match_df['Jugador 2'])[
+    close_wins_visitant = frequencies_xr.sel(teammate=player_list[0], player=player_list[1])[
         'CloseWinsPlayed'].values.item()
     receivedgoals_defense_defense_local = \
-    frequencies_xr.sel(defender=match_df['Jugador 1'], defender_rival=match_df['Jugador 3'])[
+    frequencies_xr.sel(defender=player_list[0], defender_rival=player_list[2])[
         'ReceivedGoalsGamesDefenseDefense'].values.item()
     receivedgoals_defense_defense_visitant = \
-    frequencies_xr.sel(defender=match_df['Jugador 3'], defender_rival=match_df['Jugador 1'])[
+    frequencies_xr.sel(defender=player_list[2], defender_rival=player_list[0])[
         'ReceivedGoalsGamesDefenseDefense'].values.item()
     receivedgoals_attack_defense_local = \
-    frequencies_xr.sel(defender=match_df['Jugador 1'], attacker_rival=match_df['Jugador 4'])[
+    frequencies_xr.sel(defender=player_list[0], attacker_rival=player_list[3])[
         'ReceivedGoalsGamesAttackDefense'].values.item()
     receivedgoals_attack_defense_visitant = \
-    frequencies_xr.sel(defender=match_df['Jugador 3'], attacker_rival=match_df['Jugador 2'])[
+    frequencies_xr.sel(defender=player_list[2], attacker_rival=player_list[1])[
         'ReceivedGoalsGamesAttackDefense'].values.item()
-    team_wins_local = frequencies_xr.sel(teammate=match_df['Jugador 1'], player=match_df['Jugador 2'])[
+    team_wins_local = frequencies_xr.sel(teammate=player_list[0], player=player_list[1])[
         'TeammatesWinsPlayed'].values.item()
-    team_wins_visitant = frequencies_xr.sel(teammate=match_df['Jugador 3'], player=match_df['Jugador 4'])[
+    team_wins_visitant = frequencies_xr.sel(teammate=player_list[2], player=player_list[3])[
         'TeammatesWinsPlayed'].values.item()
     #    stats_match = stats_match + [elo_attack_difference, elo_defense_difference, elo_attackh_defensea_difference, elo_defenseh_attacka_difference,
     #                                 close_wins_local, close_wins_visitant,
@@ -87,6 +93,9 @@ for player in player_list:
     #                                 team_wins_local, team_wins_visitant]
     stats_match = stats_match + [elo_attackh_defensea_difference, elo_defenseh_attacka_difference,
                                  team_wins_local, team_wins_visitant]
+
+# Desem la llista d'estadístiques d'aquest partit
+#Stats_predicting.loc[0] = stats_match
 
 # Tornem a estandaritzar els valors d'acord a com hem fet amb els valors d'entrenament
 stats_match = np.array([stats_match]) # scaler espera una matriu 2D
