@@ -20,3 +20,16 @@ D,Jugador 1,Jugador 2,Jugador 3,Jugador 4,Gols 1,Gols 2,Gols 3,Gols 4,Local,Visi
 3,Antía,Dani,Pedro,Luis,1,2,0,0,3,0,Local
 3,Antía,Dani,Guille,Víctor,1,2,1,0,3,1,Local
 3,Antía,Dani,Pedro,Luis,2,1,0,1,3,1,Local
+4,Antía,Dani,Gisela,Luis,1,2,0,1,3,1,Local
+4,Dani,Antía,Gisela,Luis,1,2,0,2,3,2,Local
+4,Antía,Dani,Pau,Gisela,0,1,3,0,1,3,Visitant
+4,Antía,Luis,Pau,Gisela,0,2,2,1,2,3,Visitant
+4,Luis,Dani,Pau,Gisela,0,3,0,0,3,0,Local
+4,Luis,Dani,Antía,Pau,0,1,2,1,1,3,Visitant
+5,Rebeca,Gisela,Guille,Elena,2,0,2,1,2,3,Visitant
+5,Pedro,Víctor,Guille,Elena,1,1,2,1,2,3,Visitant
+5,Pau,Luis,Guille,Elena,2,0,0,0,3,0,Local
+5,Pau,Luis,Gisela,Dani,0,3,1,1,3,2,Local
+5,Pau,Luis,Rebeca,Víctor,0,3,0,2,3,2,Local
+5,Pau,Luis,Guille,Pedro,2,1,0,2,3,2,Local
+5,Pau,Luis,Víctor,Dani,1,2,2,0,3,2,Local
