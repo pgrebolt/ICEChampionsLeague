@@ -22,7 +22,7 @@ from sklearn.preprocessing import StandardScaler
 plt.rcParams['axes.prop_cycle'] = plt.cycler(color=plt.cm.tab20.colors)
 
 # Carreguem les dades
-season = 'historical' # 2,3, 4, historical
+season = '5' # 2,3, 4, historical
 if season == 'historical':
     data_df = pd.read_csv(f'../generated_files/results_{season}.csv')
 else:
@@ -432,7 +432,7 @@ ds = xr.Dataset(
     data_vars=_data_vars,
     coords={"match": _match_coords, "player": players_names}
 )
-#print(ds)
+print(ds)
 #print(matches)
 #print(_match_coords, 'aaaaa')
 #print(ds['ELOAttack'].sel(match=5))
