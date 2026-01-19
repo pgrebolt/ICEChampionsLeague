@@ -30,7 +30,7 @@ data_df = data_df.fillna(0.)
 if season == 'historical':
     dataarray = xr.open_dataset('../generated_files/stats_historical.nc', engine='scipy')
 else:
-    dataarray = xr.open_dataset('../generated_files/stats.nc', engine='scipy') # cal que quadri la season d'aquest codi amb la del fitxer!
+    dataarray = xr.open_dataset('../generated_files/stats_Season_{season}.nc', engine='scipy') # cal que quadri la season d'aquest codi amb la del fitxer!
 
 played_games = dataarray['GamesPlayed'].isel(match=-1)
 
