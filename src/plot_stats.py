@@ -195,8 +195,13 @@ axs[1].set_ylabel("ELO score")
 for i in range(len(axs)):
     axs[i].set_xlim(-0.5, matchdays[-1]+0.5)
 
-for i in [-1, -2]:
-    axs[i].set_xlabel('Match')
+# Afegim els ticks en funció del dia que es juga
+if season != 'historical':
+    axs[-1].set_xticks([results_df['D'].searchsorted(day, side='left') for day in results_df['D'].unique()])  # posar ticks als dies on canvia de matchday
+    axs[-1].set_xticklabels(results_df['D'].unique()) # noms dels dies
+    axs[-1].set_xlabel('Matchday')
+else:
+    axs[-1].set_xlabel('Match')
 
 # Línies verticals que marquen els canvis de temporada
 if season == 'historical':
