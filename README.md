@@ -4,7 +4,7 @@ La millor manera d'executar el programa és descarregar el repositori amb `git c
 Per si és necessari, s'inclou el fitxer `requirements.txt` amb els paquets necessaris.
 
 ## Enllaços als outputs
-# Season 4
+# Season 5
 [Last standings table](results/standings.md)
 
 [ELO plot over matchdays](results/ELO_stats.png)
@@ -12,6 +12,15 @@ Per si és necessari, s'inclou el fitxer `requirements.txt` amb els paquets nece
 [Stats plot over matchdays](results/winplayed_stats.png)
 
 [Team stats plot](results/frequencies.png)
+
+# Season 4
+[Last standings table](results/Season4/standings.md)
+
+[ELO plot over matchdays](results/Season4/ELO_stats.png)
+
+[Stats plot over matchdays](results/Season4/winplayed_stats.png)
+
+[Team stats plot](results/Season4/frequencies.png)
 
 # Season 3
 [Last standings table](results/Season3/standings.md)
