@@ -38,12 +38,13 @@ frequencies_xr = xr.open_dataset('../generated_files/teammates_historical.nc', e
 # Ens cal codificar els resultats. Els possibles resultats són 6: '3-0', '3-1', '3-2', '0-3', '1-3', '2-3'. Perquè el model pugui treballar bé, passarem aquests possibles valors a codis (0, 1, 2, 3, 4, 5), a partir dels quals en farem l'entrenament. Per usos futurs, també codificarem el guanyador (local/vistant).
 
 encoder_winning = preprocessing.LabelEncoder() # codificador d'etiquetes ('Local'/'Visitant') a nombres (0/1)
-Results_winning_training = encoder_winning.fit_transform(matches_df['Guanyador'].values.astype(str)) # Array amb tots els resultats que farem servir per l'entrenament del model (0='Local', 1='Visitant')
+Results_winning_training = encoder_winning.fit_transform(matches_df['Guanyador'].drop(0).values.astype(str)) # Array amb tots els resultats que farem servir per l'entrenament del model (0='Local', 1='Visitant')
+# hem tret el primer partit perquè es faran servir les estadístiques del partit anterior per predir cada resultat, i per al primer partit no hi ha dades prèvies
 
 # El mateix que abans, però per tots els possibles resultats
 # Llista amb tots els resultats en format unificat (6 resultats possibles)
 Scores = [str(matches_df['Local'].iloc[i])+'-'+str(matches_df['Visitant'].iloc[i]) for i in range(matches_df.shape[0])]
-Scores = np.array(Scores)
+Scores = np.array(Scores[1:]) # hem tret el primer partit perquè es faran servir les estadístiques del partit anterior per predir cada resultat, i per al primer partit no hi ha dades prèvies
 
 # Codifiquem els resultats (0-3: 0, 1-3: 1, ..., 3-2:5)
 encoder_scores = preprocessing.LabelEncoder()
@@ -71,6 +72,7 @@ considered_stats_defense = ['WinDefensePlayed', 'WinPlayedMatchday']
 considered_stats_attack = ['WinAttackPlayed', 'WinPlayedMatchday']
 considered_stats_teams = ['ELOAttackDefenseDifference',
                           'ELODefenseAttackDifference',
+                          'ELODifference',
                           'WinsLocal', 'WinsVisitant']
 
 ## Creem el training set
@@ -78,15 +80,15 @@ considered_stats_teams = ['ELOAttackDefenseDifference',
 columns = [stat_def+'1' for stat_def in considered_stats_defense] + [stat_att+'2' for stat_att in considered_stats_attack] +\
             [stat_def+'3' for stat_def in considered_stats_defense] + [stat_att+'4' for stat_att in considered_stats_attack] # noms de les columnes
 Stats_training = pd.DataFrame(columns = columns + considered_stats_teams)
+print(Stats_training.columns)
 #Stats_training = pd.DataFrame(columns = ['ELODiffAttack'])
 
 #for nmatch in matches_df['Total_D']: # per cada partit disputat
-for match in range(1, matches_df.shape[0]+1): # per cada partit disputat
+for match in range(1, matches_df.shape[0]): # per cada partit disputat
 #for match in range(int(0.2*matches_df.shape[0])+1, matches_df.shape[0]+1): # per cada partit disputat. Treiem els primers partits que no representen l'ELO real dels jugadors
     match_df = matches_df.iloc[match-1] # triem les dades d'aquest partit
 
     #matchday = match_df['Total_D']-1 # número de matchday
-
     # Llista on hi desarem els valors des les estadístiques de cada jugador que hi ha al camp, amb el mateix ordre que `columns`
     stats_match = []
     for player in match_df[['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4']]:
@@ -103,6 +105,10 @@ for match in range(1, matches_df.shape[0]+1): # per cada partit disputat
                              stats_xr.sel(match=match, player=match_df['Jugador 4'])['ELOAttack'].values.item())
     elo_defense_difference = (stats_xr.sel(match=match, player=match_df['Jugador 1'])['ELODefense'].values.item() -
                              stats_xr.sel(match=match, player=match_df['Jugador 3'])['ELODefense'].values.item())
+    elo_difference = ( (stats_xr.sel(match=match, player=match_df['Jugador 1']))['ELODefense'].values.item() +
+                       (stats_xr.sel(match=match, player=match_df['Jugador 2']))['ELOAttack'].values.item() -
+                       ((stats_xr.sel(match=match, player=match_df['Jugador 3']))['ELODefense'].values.item() +
+                       (stats_xr.sel(match=match, player=match_df['Jugador 4']))['ELOAttack'].values.item() ))
     elo_attackh_defensea_difference = (stats_xr.sel(match=match, player=match_df['Jugador 2'])['ELOAttack'].values.item() -
                               stats_xr.sel(match=match, player=match_df['Jugador 3'])['ELODefense'].values.item()) # diferència ELO atacant-defensor rivals
     elo_defenseh_attacka_difference = (stats_xr.sel(match=match, player=match_df['Jugador 1'])['ELODefense'].values.item() -
@@ -121,7 +127,7 @@ for match in range(1, matches_df.shape[0]+1): # per cada partit disputat
 #                                 receivedgoals_attack_defense_local, receivedgoals_attack_defense_visitant,
 #                                 team_wins_local, team_wins_visitant]
     stats_match = stats_match + [elo_attackh_defensea_difference, elo_defenseh_attacka_difference,
-                                     team_wins_local, team_wins_visitant]
+                                     elo_difference, team_wins_local, team_wins_visitant]
 
     # Afegim el codi numèric de cada jugador
     #player_codes_match = [player_codes_dict[match_df['Jugador 1']], player_codes_dict[match_df['Jugador 2']],
@@ -145,6 +151,12 @@ joblib.dump(scaler, '../generated_files/scaler.pkl')
 
 # Separem tots els partits que tenim en una mostra d'entrenament (train) i una mostra de test.
 # Això ens permetrà avaluar el rendiment del nostre model. En aquest cas, de la mostra total un 10% serà de test i el 90% restant serà per entrenar el model.
+
+# Retallem els datasets. Deixem fora els primers partits per aconseguir ELOs estables per cada jugador
+threshold = 0.2 # descartem el primer X% de partits per entrenar el model
+Scores_training = Scores_training[int(threshold*len(Scores_training)):]
+Results_winning_training = Results_winning_training[int(threshold*len(Results_winning_training)):]
+Stats_training_stand = Stats_training_stand[int(threshold*Stats_training_stand.shape[0]):, :]
 
 X_train, X_test, y_winning_train, y_winning_test, y_score_train, y_score_test = (
     train_test_split(Stats_training_stand, Results_winning_training, Scores_training, test_size=0.2))
