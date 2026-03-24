@@ -506,6 +506,7 @@ ax.set_ylabel('Metric')
 
 plt.tight_layout()
 plt.show()
+#plt.savefig("../results/classification_metrics_comparison.png", dpi=300, bbox_inches='tight')
 
 print("\nVisualisations generated successfully.")
 
@@ -544,6 +545,7 @@ ax.invert_yaxis()
 
 plt.tight_layout()
 plt.show()
+#plt.savefig("../results/feature_importance_comparison.png", dpi=300, bbox_inches='tight')
 
 print("Feature importance analysis complete.")
 
