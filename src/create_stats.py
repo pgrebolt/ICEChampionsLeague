@@ -392,7 +392,12 @@ for nmatchday in range(len(matchdays)):
     receiveddefenseplayed_matchdays = join_matchdays(receiveddefenseplayed_matchdays, receiveddefenseplayed_counts)
 
 
-# Desem les dades a un xarray. Aquest format permet emmagatzemar matrius 3D, cosa que pandas no ho permet. A la nostra matriu tindrem dimensions (Nom de jugador, Dia de partit, Paràmetre). Això ens permet accedir a l'element que deseitgem.
+# #Ràtio neta de gols anotats i rebuts: (Anotats - Rebuts) / Partits jugats
+divisor = played_matchdays.values
+safe_divisor = np.where(divisor == 0, 1, divisor)
+neat_goals_ratio_values = np.where(divisor!=0, (scored_matchdays.values - received_matchdays.values)/safe_divisor, 0.)
+neatgoals_matchdays = scored_matchdays - received_matchdays
+neatgoalsplayed_matchdays = pd.DataFrame(neat_goals_ratio_values, index=scored_matchdays.index, columns=scored_matchdays.columns)
 
 # Creem una DataArray de xarray. Hi especifiquem els noms de cada dimensió
 winplayed_matchdays_da = xr.DataArray(winplayed_matchdays.values, dims = ('matchday', 'player'),
@@ -431,6 +436,10 @@ receivedattackplayed_matchdays_da = xr.DataArray(receivedattackplayed_matchdays.
                                       coords = {'matchday': receivedplayed_matchdays.index, 'player': receivedplayed_matchdays.columns})
 receiveddefenseplayed_matchdays_da = xr.DataArray(receiveddefenseplayed_matchdays.values, dims = ('matchday', 'player'),
                                       coords = {'matchday': receivedplayed_matchdays.index, 'player': receivedplayed_matchdays.columns})
+neatgoals_matchdays_da = xr.DataArray(neatgoals_matchdays.values, dims = ('matchday', 'player'),
+                                      coords = {'matchday': neatgoals_matchdays.index, 'player': neatgoals_matchdays.columns})
+neatgoalsplayed_matchdays_da = xr.DataArray(neatgoalsplayed_matchdays.values, dims = ('matchday', 'player'),
+                                      coords = {'matchday': neatgoalsplayed_matchdays.index, 'player': neatgoalsplayed_matchdays.columns})
 elo_attack_matchdays_da = xr.DataArray(elo_attack_matchdays.values, dims = ('matchday', 'player'),
                                       coords = {'matchday': elo_attack_matchdays.index, 'player': elo_attack_matchdays.columns})
 elo_defense_matchdays_da = xr.DataArray(elo_defense_matchdays.values, dims = ('matchday', 'player'),
@@ -455,6 +464,8 @@ dataset = xr.Dataset({"GamesPlayed": played_matchdays_da,
                       "ReceivedDefense": receiveddefense_matchdays_da,
                       "ReceivedAttackPlayed": receivedattackplayed_matchdays_da,
                       "ReceivedDefensePlayed": receiveddefenseplayed_matchdays_da,
+                      "NeatGoals": neatgoals_matchdays_da,
+                      "NeatGoalsPlayed": neatgoalsplayed_matchdays_da,
                       "ELOAttack": elo_attack_matchdays_da,
                       "ELODefense": elo_defense_matchdays_da})
 
