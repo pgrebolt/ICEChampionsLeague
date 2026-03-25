@@ -17,7 +17,7 @@ import pandas as pd
 import xarray as xr # per guardar les dades 3D
 
 # Carreguem les dades
-season = 'historical' # 2,3, 4, historical
+season = '5' # 2,3, 4, historical
 if season == 'historical':
     data_df = pd.read_csv(f'../generated_files/results_{season}.csv')
 else:
@@ -30,7 +30,7 @@ data_df = data_df.fillna(0.)
 if season == 'historical':
     dataarray = xr.open_dataset('../generated_files/stats_historical.nc', engine='scipy')
 else:
-    dataarray = xr.open_dataset('../generated_files/stats.nc', engine='scipy') # cal que quadri la season d'aquest codi amb la del fitxer!
+    dataarray = xr.open_dataset(f'../generated_files/stats_Season_{season}.nc', engine='scipy') # cal que quadri la season d'aquest codi amb la del fitxer!
 
 played_games = dataarray['GamesPlayed'].isel(match=-1)
 
@@ -347,6 +347,7 @@ dataset = xr.Dataset({"Teammates": mates_da,
 
 # TODO: el procés de crear el DataArray a partir del DataFrame es pot automatitzar amb una funció que faci un concat al dataframe. 
 
+print(list(dataset.keys()))
 # Save dataset
 if season == 'historical':
     dataset.to_netcdf('../generated_files/teammates_historical.nc', mode='w')

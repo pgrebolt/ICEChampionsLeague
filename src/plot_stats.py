@@ -28,7 +28,7 @@ plt.rcParams['axes.prop_cycle'] = plt.cycler(color=plt.cm.tab20.colors)
 
 # Llegim les dades
 # Carreguem les dades
-season = '5' # 2,3, 4, historical
+season = '5' # 2,3, 4, 5 historical
 if season == 'historical':
     results_df = pd.read_csv(f'../generated_files/results_{season}.csv') # fitxer amb les dades dels partits
     dataarray = xr.open_dataset(f'../generated_files/stats_{season}.nc', engine='scipy') # fitxer amb les dades de les estadístiques
@@ -101,7 +101,8 @@ def plot_matchday_evolution(parameter, title, ax, label=False):
 
 
 # Initialize figure
-fig, axs = plt.subplots(figsize=(12, 18), ncols= 2, nrows = 4, sharex=True)
+x_inch, figure_ratio = 25, 9/18
+fig, axs = plt.subplots(figsize=(x_inch, x_inch*figure_ratio), ncols= 2, nrows = 4, sharex=True)
 axs = axs.flatten()
 
 plot_matchday_evolution('WinPlayed', "Most winning player", axs[0], label = True)
@@ -179,7 +180,8 @@ def plot_standings_table(parameter, title, ax):
         cell.set_width(col_widths[col])
 
 # Initialize figure
-fig, axs = plt.subplots(figsize=(10, 12), ncols= 1, nrows = 3, sharex=True)
+x_inch, figure_ratio = 15, 9/16
+fig, axs = plt.subplots(figsize=(x_inch, x_inch*figure_ratio), ncols= 1, nrows = 3, sharex=True)
 axs = axs.flatten()
 
 plot_matchday_evolution('ELOAttack', "ELO attack", axs[0], label=True)
@@ -195,8 +197,13 @@ axs[1].set_ylabel("ELO score")
 for i in range(len(axs)):
     axs[i].set_xlim(-0.5, matchdays[-1]+0.5)
 
-for i in [-1, -2]:
-    axs[i].set_xlabel('Match')
+# Afegim els ticks en funció del dia que es juga
+if season != 'historical':
+    axs[-1].set_xticks([results_df['D'].searchsorted(day, side='left') for day in results_df['D'].unique()])  # posar ticks als dies on canvia de matchday
+    axs[-1].set_xticklabels(results_df['D'].unique()) # noms dels dies
+    axs[-1].set_xlabel('Matchday')
+else:
+    axs[-1].set_xlabel('Match')
 
 # Línies verticals que marquen els canvis de temporada
 if season == 'historical':
