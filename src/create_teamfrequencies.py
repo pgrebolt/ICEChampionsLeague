@@ -347,6 +347,7 @@ dataset = xr.Dataset({"Teammates": mates_da,
 
 # TODO: el procés de crear el DataArray a partir del DataFrame es pot automatitzar amb una funció que faci un concat al dataframe. 
 
+print(list(dataset.keys()))
 # Save dataset
 if season == 'historical':
     dataset.to_netcdf('../generated_files/teammates_historical.nc', mode='w')
