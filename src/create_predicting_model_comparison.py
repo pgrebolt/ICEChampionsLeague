@@ -118,7 +118,7 @@ player_codes_dict = {players_names[i]: player_codes[i] for i in range(len(player
 #                          'CloseWinsVisitant', 'ReceivedGoalsDDLocal', 'ReceivedGoalsDDVisitant',
 #                          'ReceivedGoalsADLocal', 'ReceivedGoalsADVisitant', 'WinsLocal', 'WinsVisitant']
 considered_stats_defense = ['WinDefensePlayed', 'WinPlayedMatchday', 'ReceivedDefensePlayed']
-considered_stats_attack = ['WinAttackPlayed', 'WinPlayedMatchday', 'ScoredAttackPlayed']# afegir Goals_Differential_per_Game
+considered_stats_attack = ['WinAttackPlayed', 'WinPlayedMatchday', 'ScoredAttackPlayed', 'NeatGoalsPlayed']
 considered_stats_teams = ['ELOAttackDefenseDifference',
                           'ELODefenseAttackDifference',
                           'ELODifference',
