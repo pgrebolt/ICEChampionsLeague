@@ -22,7 +22,7 @@ from sklearn.preprocessing import StandardScaler
 plt.rcParams['axes.prop_cycle'] = plt.cycler(color=plt.cm.tab20.colors)
 
 # Carreguem les dades
-season = '5' # 2,3, 4, historical
+season = 'historical' # 2,3, 4, historical
 #season = "historical"
 if season == 'historical':
     data_df = pd.read_csv(f'../generated_files/results_{season}.csv')
@@ -235,6 +235,7 @@ params = [
     "ScoredAttackPlayed", "ScoredDefensePlayed",
     "Received", "ReceivedPlayed", "ReceivedAttack", "ReceivedDefense",
     "ReceivedAttackPlayed", "ReceivedDefensePlayed",
+    "NeatGoals", "NeatGoalsPlayed", "NeatGoalsAttack", "NeatGoalsDefense", "NeatGoalsAttackPlayed", "NeatGoalsDefensePlayed",
     "ELOAttack", "ELODefense", "WeightedELO"
 ]
 
@@ -333,6 +334,11 @@ for match in range(1, matches+1):
     # En qualsevol posició
     received_match = {k: receiveddefense_match.get(k, 0) + receivedattack_match.get(k, 0) for k in players_names}
 
+    ## Saldo net de gols
+    neatgoalsattack_match = {k: (scoredattack_match.get(k, 0) - receivedattack_match.get(k, 0)) for k in players_names}
+    neatgoalsdefense_match = {k: (scoreddefense_match.get(k, 0)- receiveddefense_match.get(k, 0)) for k in players_names}
+    neatgoals_match = {k: (scored_match.get(k, 0) - received_match.get(k, 0)) for k in players_names}
+
     ## Recompte de partits guanyats
     if match < first_away_win+1: # pel primer partit
         try: # si ha guayat el local
@@ -372,6 +378,11 @@ for match in range(1, matches+1):
     receiveddefenseplayed_match = {k: receiveddefense_match.get(k, 0) / (playeddefense_match.get(k, 1) if playeddefense_match.get(k, 1) else 1) for k in players_names}
     receivedplayed_match = {k: received_match.get(k, 0) / (played.get(k, 1) if played.get(k, 1) else 1) for k in players_names}
 
+    # Saldo de gols
+    neatgoalsattackplayed_match = {k: neatgoalsattack_match.get(k, 0) / (playedattack_match.get(k, 1) if playedattack_match.get(k, 1) else 1) for k in players_names} # evitem divisió per 0
+    neatgoalsdefenseplayed_match = {k: neatgoalsdefense_match.get(k, 0) / (playeddefense_match.get(k, 1) if playeddefense_match.get(k, 1) else 1) for k in players_names}
+    neatgoalsplayed_match = {k: neatgoals_match.get(k, 0) / (played.get(k, 1) if played.get(k, 1) else 1) for k in players_names}
+
     ## Càlcul d'ELO actualitzat després d'aquest partit
     elo_defense_match, elo_attack_match, elo_weighted_match = update_elo(previous_matches, _acc)
 
@@ -392,7 +403,7 @@ for match in range(1, matches+1):
     _acc["WinAttackPlayed"].append(_dict_to_row(winattackplayed_match, players_names))
     _acc["WinDefensePlayed"].append(_dict_to_row(windefenseplayed_match, players_names))
 
-    # scored / received (only if you compute them per matchday)
+    # scored / received
     _acc["Scored"].append(_dict_to_row(scored_match, players_names))
     _acc["ScoredPlayed"].append(_dict_to_row(scoredplayed_match, players_names))
     _acc["ScoredAttack"].append(_dict_to_row(scoredattack_match, players_names))
@@ -406,6 +417,13 @@ for match in range(1, matches+1):
     _acc["ReceivedDefense"].append(_dict_to_row(receiveddefense_match, players_names))
     _acc["ReceivedAttackPlayed"].append(_dict_to_row(receivedattackplayed_match, players_names))
     _acc["ReceivedDefensePlayed"].append(_dict_to_row(receiveddefenseplayed_match, players_names))
+
+    _acc["NeatGoals"].append(_dict_to_row(neatgoals_match, players_names))
+    _acc["NeatGoalsPlayed"].append(_dict_to_row(neatgoalsplayed_match, players_names))
+    _acc["NeatGoalsAttack"].append(_dict_to_row(neatgoalsattack_match, players_names))
+    _acc["NeatGoalsDefense"].append(_dict_to_row(neatgoalsdefense_match, players_names))
+    _acc["NeatGoalsAttackPlayed"].append(_dict_to_row(neatgoalsattackplayed_match, players_names))
+    _acc["NeatGoalsDefensePlayed"].append(_dict_to_row(neatgoalsdefenseplayed_match, players_names))
 
     # ELO dicts (ensure these are per-matchday snapshots or dictionaries of current ratings)
     #TODO: no està creant bé els diccionaris. El primer partit no es desa i l'últim i el penúltim són iguals
