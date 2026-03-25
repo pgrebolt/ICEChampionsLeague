@@ -74,9 +74,13 @@ matches_df = pd.read_csv('../generated_files/results_historical.csv')
 
 # Llegim les estadístiques de cada jugador
 stats_xr = xr.open_dataset('../generated_files/stats_historical.nc', engine='scipy')
+print("Individual available parameters:")
+print(list(stats_xr.keys()))
 
 # Llegim les estadístiques creuades (com un jugador es comporta contra un altre)
 frequencies_xr = xr.open_dataset('../generated_files/teammates_historical.nc', engine='scipy')
+print("Team available parameters:")
+print(list(frequencies_xr.keys()))
 
 # Construïm una matriu amb els paràmetres dels jugadors a pista (matriu `X`) i una matriu amb el resultat (matriu `y`). La matriu `y` l'extraiem directament de `matches_df`. La matriu `X` la construïm a partir dels jugadors que són a pista a cada partit (de `matches_df`) i les estadístiques de `stats_xr`.
 
@@ -113,23 +117,27 @@ player_codes_dict = {players_names[i]: player_codes[i] for i in range(len(player
 #                          'ELODefenseAttackDifference', 'CloseWinsLocal',
 #                          'CloseWinsVisitant', 'ReceivedGoalsDDLocal', 'ReceivedGoalsDDVisitant',
 #                          'ReceivedGoalsADLocal', 'ReceivedGoalsADVisitant', 'WinsLocal', 'WinsVisitant']
-considered_stats_defense = ['WinDefensePlayed', 'WinPlayedMatchday']
-considered_stats_attack = ['WinAttackPlayed', 'WinPlayedMatchday']
+considered_stats_defense = ['WinDefensePlayed', 'WinPlayedMatchday', 'ReceivedDefensePlayed']
+considered_stats_attack = ['WinAttackPlayed', 'WinPlayedMatchday', 'ScoredAttackPlayed']# afegir Goals_Differential_per_Game
 considered_stats_teams = ['ELOAttackDefenseDifference',
                           'ELODefenseAttackDifference',
                           'ELODifference',
-                          'WinsLocal', 'WinsVisitant']
+                          'WinsLocal', 'WinsVisitant', 'CloseWinsPlayedLocal', 'CloseWinsPlayedVisitant']
+print("\nChosen parameters for defense:", considered_stats_defense)
+print("Chosen parameters for attack:", considered_stats_attack)
+print("Chosen parameters for teams:", considered_stats_teams)
+print()
 
 ## Creem el training set
 # Dataframe on hi desem tots els paràmetres d'avaluació de cada jugador
 columns = [stat_def+'1' for stat_def in considered_stats_defense] + [stat_att+'2' for stat_att in considered_stats_attack] +\
             [stat_def+'3' for stat_def in considered_stats_defense] + [stat_att+'4' for stat_att in considered_stats_attack] # noms de les columnes
 feature_names = columns + considered_stats_teams
+print(len(feature_names))
 Stats_training = pd.DataFrame(columns = feature_names)
-print(Stats_training.columns)
+#print(Stats_training.columns)
 #Stats_training = pd.DataFrame(columns = ['ELODiffAttack'])
 
-#for nmatch in matches_df['Total_D']: # per cada partit disputat
 for match in range(1, matches_df.shape[0]): # per cada partit disputat
 #for match in range(int(0.2*matches_df.shape[0])+1, matches_df.shape[0]+1): # per cada partit disputat. Treiem els primers partits que no representen l'ELO real dels jugadors
     match_df = matches_df.iloc[match-1] # triem les dades d'aquest partit
@@ -167,14 +175,20 @@ for match in range(1, matches_df.shape[0]): # per cada partit disputat
     receivedgoals_attack_defense_visitant = frequencies_xr.sel(defender = match_df['Jugador 3'], attacker_rival = match_df['Jugador 2'])['ReceivedGoalsGamesAttackDefense'].values.item()
     team_wins_local = frequencies_xr.sel(teammate = match_df['Jugador 1'], player = match_df['Jugador 2'])['TeammatesWinsPlayed'].values.item()
     team_wins_visitant = frequencies_xr.sel(teammate = match_df['Jugador 3'], player = match_df['Jugador 4'])['TeammatesWinsPlayed'].values.item()
+
+    # Per CloseWinsPlayed, fem que el valor sigui 0.5 si l'original és NaN, que vol dir que no han jugat mai un Close Match junts
+    if np.isnan(close_wins_local):
+      close_wins_local = 0.5
+    if np.isnan(close_wins_visitant):
+        close_wins_visitant = 0.5
+
 #    stats_match = stats_match + [elo_attack_difference, elo_defense_difference, elo_attackh_defensea_difference, elo_defenseh_attacka_difference,
 #                                 close_wins_local, close_wins_visitant,
 #                                 receivedgoals_defense_defense_local, receivedgoals_defense_defense_visitant,
 #                                 receivedgoals_attack_defense_local, receivedgoals_attack_defense_visitant,
 #                                 team_wins_local, team_wins_visitant]
     stats_match = stats_match + [elo_attackh_defensea_difference, elo_defenseh_attacka_difference,
-                                     elo_difference, team_wins_local, team_wins_visitant]
-
+                                     elo_difference, team_wins_local, team_wins_visitant, close_wins_local, close_wins_visitant]
     # Afegim el codi numèric de cada jugador
     #player_codes_match = [player_codes_dict[match_df['Jugador 1']], player_codes_dict[match_df['Jugador 2']],
     #                      player_codes_dict[match_df['Jugador 3']], player_codes_dict[match_df['Jugador 4']]]
@@ -250,6 +264,8 @@ X_class_trn, X_class_tst, y_class_trn, y_class_tst = (
 
 print(f"Training set size: {X_class_trn.shape[0]}")
 print(f"Testing set size: {X_class_tst.shape[0]}")
+print(np.argwhere(np.isnan(X_class_trn))) # check for NaN values in training set
+print(np.argwhere(np.isnan(X_class_tst))) # check for NaN values in training set
 
 ## Decision Tree Classifier
 dt_class = DecisionTreeClassifier(
