@@ -236,6 +236,7 @@ params = [
     "Received", "ReceivedPlayed", "ReceivedAttack", "ReceivedDefense",
     "ReceivedAttackPlayed", "ReceivedDefensePlayed",
     "NeatGoals", "NeatGoalsPlayed", "NeatGoalsAttack", "NeatGoalsDefense", "NeatGoalsAttackPlayed", "NeatGoalsDefensePlayed",
+    "CleanSheet", "CleanSheetPlayed", "CleanSheetAttack", "CleanSheetDefense", "CleanSheetAttackPlayed", "CleanSheetDefensePlayed",
     "ELOAttack", "ELODefense", "WeightedELO"
 ]
 
@@ -334,6 +335,24 @@ for match in range(1, matches+1):
     # En qualsevol posició
     received_match = {k: receiveddefense_match.get(k, 0) + receivedattack_match.get(k, 0) for k in players_names}
 
+    ### Nombre de porteries a 0
+    # Com a defensor
+    clean_j1 = (previous_matches.assign(received_as_j1=previous_matches['Gols 3'] + previous_matches['Gols 4'])
+                .groupby('Jugador 1')['received_as_j1'].apply(lambda s: (s == 0).sum()))
+    clean_j3 = (previous_matches.assign(received_as_j3=previous_matches['Gols 1'] + previous_matches['Gols 2'])
+                .groupby('Jugador 3')['received_as_j3'].apply(lambda s: (s == 0).sum()))
+    cleansheetdefense_match = {k: clean_j1.get(k, 0) + clean_j3.get(k, 0) for k in players_names}
+
+    # Com a atacant
+    clean_j2 = (previous_matches.assign(received_as_j2=previous_matches['Gols 3'] + previous_matches['Gols 4'])
+                .groupby('Jugador 2')['received_as_j2'].apply(lambda s: (s == 0).sum()))
+    clean_j4 = (previous_matches.assign(received_as_j4=previous_matches['Gols 1'] + previous_matches['Gols 2'])
+                .groupby('Jugador 4')['received_as_j4'].apply(lambda s: (s == 0).sum()))
+    cleansheetattack_match = {k: clean_j2.get(k, 0) + clean_j4.get(k, 0) for k in players_names}
+
+    # En qualsevol posició
+    cleansheet_match = {k: cleansheetdefense_match.get(k, 0) + cleansheetattack_match.get(k, 0) for k in players_names}
+
     ## Saldo net de gols
     neatgoalsattack_match = {k: (scoredattack_match.get(k, 0) - receivedattack_match.get(k, 0)) for k in players_names}
     neatgoalsdefense_match = {k: (scoreddefense_match.get(k, 0)- receiveddefense_match.get(k, 0)) for k in players_names}
@@ -383,6 +402,11 @@ for match in range(1, matches+1):
     neatgoalsdefenseplayed_match = {k: neatgoalsdefense_match.get(k, 0) / (playeddefense_match.get(k, 1) if playeddefense_match.get(k, 1) else 1) for k in players_names}
     neatgoalsplayed_match = {k: neatgoals_match.get(k, 0) / (played.get(k, 1) if played.get(k, 1) else 1) for k in players_names}
 
+    # Porteries a 0
+    cleansheetattackplayed_match = {k: cleansheetattack_match.get(k, 0) / (playedattack_match.get(k, 1) if playedattack_match.get(k, 1) else 1) for k in players_names} # evitem divisió per 0
+    cleansheetdefenseplayed_match = {k: cleansheetdefense_match.get(k, 0) / (playeddefense_match.get(k, 1) if playeddefense_match.get(k, 1) else 1) for k in players_names}
+    cleansheetplayed_match = {k: cleansheet_match.get(k, 0) / (played.get(k, 1) if played.get(k, 1) else 1) for k in players_names}
+
     ## Càlcul d'ELO actualitzat després d'aquest partit
     elo_defense_match, elo_attack_match, elo_weighted_match = update_elo(previous_matches, _acc)
 
@@ -424,6 +448,13 @@ for match in range(1, matches+1):
     _acc["NeatGoalsDefense"].append(_dict_to_row(neatgoalsdefense_match, players_names))
     _acc["NeatGoalsAttackPlayed"].append(_dict_to_row(neatgoalsattackplayed_match, players_names))
     _acc["NeatGoalsDefensePlayed"].append(_dict_to_row(neatgoalsdefenseplayed_match, players_names))
+
+    _acc["CleanSheet"].append(_dict_to_row(cleansheet_match, players_names))
+    _acc["CleanSheetPlayed"].append(_dict_to_row(cleansheetplayed_match, players_names))
+    _acc["CleanSheetAttack"].append(_dict_to_row(cleansheetattack_match, players_names))
+    _acc["CleanSheetDefense"].append(_dict_to_row(cleansheetdefense_match, players_names))
+    _acc["CleanSheetAttackPlayed"].append(_dict_to_row(cleansheetattackplayed_match, players_names))
+    _acc["CleanSheetDefensePlayed"].append(_dict_to_row(cleansheetdefenseplayed_match, players_names))
 
     # ELO dicts (ensure these are per-matchday snapshots or dictionaries of current ratings)
     #TODO: no està creant bé els diccionaris. El primer partit no es desa i l'últim i el penúltim són iguals

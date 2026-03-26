@@ -28,7 +28,7 @@ plt.rcParams['axes.prop_cycle'] = plt.cycler(color=plt.cm.tab20.colors)
 
 # Llegim les dades
 # Carreguem les dades
-season = '5' # 2,3, 4, 5 historical
+season = 'historical' # 2,3, 4, 5 historical
 if season == 'historical':
     results_df = pd.read_csv(f'../generated_files/results_{season}.csv') # fitxer amb les dades dels partits
     dataarray = xr.open_dataset(f'../generated_files/stats_{season}.nc', engine='scipy') # fitxer amb les dades de les estadístiques
@@ -111,8 +111,8 @@ plot_matchday_evolution('ScoredAttackPlayed', "Most offensive striker", axs[2])
 plot_matchday_evolution('ScoredDefensePlayed', "Most offensive defender", axs[3])
 plot_matchday_evolution('ReceivedAttackPlayed', "Most defensive striker", axs[4])
 plot_matchday_evolution('ReceivedDefensePlayed', "Most defensive defender", axs[5])
-plot_matchday_evolution('ELOAttack', "ELO attack", axs[6])
-plot_matchday_evolution('ELODefense', "ELO defense", axs[7])
+plot_matchday_evolution('CleanSheetPlayed', "Most clean sheets", axs[6])
+plot_matchday_evolution('WeightedELO', "Weighted ELO", axs[7])
 
 axs[1].set_xlabel("Matchday")
 axs[0].set_ylabel("Games won / Games played")
@@ -121,11 +121,14 @@ axs[2].set_ylabel("Goals scored attack / Games played attack")
 axs[3].set_ylabel("Goals scored defense / Games played defense")
 axs[4].set_ylabel("Goals received attack / Games played attack")
 axs[5].set_ylabel("Goals received defense / Games played defense")
-axs[6].set_ylabel("ELO score")
-axs[7].set_ylabel("ELO score")
+axs[6].set_ylabel("0 goals received / Games played")
+axs[7].set_ylabel("Weighted ELO")
 
+# Límits dels eixos
 for i in range(len(axs)):
     axs[i].set_xlim(-0.5, matchdays[-1]+0.5)
+
+axs[6].set_ylim(-0.05, 0.25)
 
 for i in [-1, -2]:
     axs[i].set_xlabel('Matchday')
