@@ -54,6 +54,8 @@ winmates_attack_df = pd.DataFrame(columns = players_names) # number of games won
 closematches_df = pd.DataFrame(columns = players_names) # number of games where the game ended 2-3 or 3-2 (won or lost)
 closewins_df = pd.DataFrame(columns = players_names) # number of games won by 1 goal (3-2 or 2-3)
 closewinsplayed_df = pd.DataFrame(columns = players_names) # number of games won by 1 goal divided by total number of close matches
+cleanwins_df = pd.DataFrame(columns = players_names) # number of games won by 3 goals (3-0 or 0-3)
+cleanwinsplayed_df = pd.DataFrame(columns = players_names)  # number of games won by 3 goals divided by the total number of games played
 
 # Possible lineups
 lineups = [['Jugador 1', 'Jugador 2'], ['Jugador 2', 'Jugador 1'], ['Jugador 3', 'Jugador 4'], ['Jugador 4', 'Jugador 3']]
@@ -68,6 +70,8 @@ for player in players_names: # for eack player
     closematches_count = {}
     closewins_count = {}
     closewinsplayed_count = {}
+    cleanwins_count = {}
+    cleanwinsplayed_count = {}
 
     # Comptadors a 0
     for mate in players_names:
@@ -79,6 +83,8 @@ for player in players_names: # for eack player
         closematches_count[mate] = 0
         closewins_count[mate] = 0
         closewinsplayed_count[mate] = 0
+        cleanwins_count[mate] = 0
+        cleanwinsplayed_count[mate] = 0
 
     # Calculate number of playing counts and victories
     for lineup in lineups:
@@ -89,6 +95,7 @@ for player in players_names: # for eack player
         for mate in teammate_list_counts.keys():
             close_victories = 0 # initialize close victories with this mate and this lineup
             close_losses = 0
+            clean_wins = 0 # initialize clean wins with this mate and this lineup
 
             mate_count[mate] = mate_count.get(mate, 0) + teammate_list_counts.loc[mate] # store the teammate join number
 
@@ -111,6 +118,8 @@ for player in players_names: # for eack player
                 #closewins_count[mate] = closewins_count.get(mate, 0) + close_victories # store close victories with this mate
                 #closematches_count[mate] = closematches_count.get(mate, 0) + (close_victories + close_losses) # store close victories and losses with this mate
 
+                clean_wins += ((lineup_df['Local'][mask_mate] - lineup_df['Visitant'][mask_mate]) == 3).sum() # només jugant com a local
+
                 if lineup == lineups[1]: # if the game lineup had the player as attacker
                     mates_attack_count[mate] = mates_attack_count.get(mate, 0) + teammate_list_counts.loc[mate] # games won being attacker, with mate being defender
 
@@ -127,8 +136,12 @@ for player in players_names: # for eack player
                 close_victories += ((lineup_df['Visitant'][mask_mate] - lineup_df['Local'][mask_mate]) == 1).sum() # calculate number of close victories (3-2)
                 close_losses += ((lineup_df['Local'][mask_mate] - lineup_df['Visitant'][mask_mate]) == 1).sum() # calculate number of close losses (2-3)
 
+                clean_wins += ((lineup_df['Visitant'][mask_mate] - lineup_df['Local'][mask_mate]) == 3).sum() # només jugant com a visitant
+
             closewins_count[mate] = closewins_count.get(mate, 0) + close_victories # store close victories with this mate
             closematches_count[mate] = closematches_count.get(mate, 0) + (close_victories + close_losses) # store close victories and losses with this mate
+
+            cleanwins_count[mate] = cleanwins_count.get(mate, 0) + clean_wins # store clean wins with this mate
 
             # If we take into acount player position
             #if lineup in [lineups[0], lineups[2]]: # pick lineups playing as defender
@@ -146,6 +159,9 @@ for player in players_names: # for eack player
             mate_count[mate] = np.nan
             mateplayed_count[mate] = np.nan
             winmate_count[mate] = np.nan
+        if cleanwins_count[mate] == 0:
+            cleanwins_count[mate] = np.nan
+            cleanwinsplayed_count[mate] = np.nan
 
         if played_games.sel(player = player).values == 0:
             continue
@@ -155,6 +171,12 @@ for player in players_names: # for eack player
                 continue
             else:
                 closewinsplayed_count[mate] = closewins_count.get(mate, 0) / closematches_count.get(mate, 0)
+
+            if cleanwins_count.get(mate, 0) == 0:
+                continue
+            else:
+                cleanwinsplayed_count[mate] = cleanwins_count.get(mate, 0) / mate_count.get(mate, 0)
+
     # Append this player result to the overall property dataframe
     mates_df = pd.concat([mates_df, pd.DataFrame([mate_count])])
     matesplayed_df = pd.concat([matesplayed_df, pd.DataFrame([mateplayed_count])])
@@ -164,6 +186,8 @@ for player in players_names: # for eack player
     closematches_df = pd.concat([closematches_df, pd.DataFrame([closematches_count])])
     closewins_df = pd.concat([closewins_df, pd.DataFrame([closewins_count])])
     closewinsplayed_df = pd.concat([closewinsplayed_df, pd.DataFrame([closewinsplayed_count])])
+    cleanwins_df = pd.concat([cleanwins_df, pd.DataFrame([cleanwins_count])])
+    cleanwinsplayed_df = pd.concat([cleanwinsplayed_df, pd.DataFrame([cleanwinsplayed_count])])
 
 # Transpose to match dimesnions with xarray dimensions (x: player, y: teammate)
 matesplayed_df = matesplayed_df.transpose() # necessary if matrix is not symmetric
@@ -178,11 +202,15 @@ winmates_attack_df = winmates_attack_df.set_index(players_names)
 closematches_df = closematches_df.set_index(players_names)
 closewins_df = closewins_df.set_index(players_names)
 closewinsplayed_df = closewinsplayed_df.set_index(players_names)
+cleanwins_df = cleanwins_df.set_index(players_names)
+cleanwinsplayed_df = cleanwinsplayed_df.set_index(players_names)
 
 # Convert to float (problems with nan)
 #closematches_df = closematches_df.astype(int) # no sé per què em sortia error si no faig aquesta línia
 closewins_df = closewins_df.astype(float)
 closewinsplayed_df = closewinsplayed_df.astype(float)
+cleanwins_df = cleanwins_df.astype(float)
+cleanwinsplayed_df = cleanwinsplayed_df.astype(float)
 
 # Create win / played ratio for each team (substitute 0 in the denominator by NaN, then recover 0 in the result)
 winmatesplayed_df = winmates_df.div(mates_df.replace(0, pd.NA))
@@ -315,6 +343,10 @@ closematches_da = xr.DataArray(closematches_df.values, dims = ('teammate', 'play
                                       coords = {'teammate': closematches_df.index, 'player': closematches_df.columns})
 closewinsplayed_da = xr.DataArray(closewinsplayed_df.values, dims = ('teammate', 'player'),
                                       coords = {'teammate': closewinsplayed_df.index, 'player': closewinsplayed_df.columns})
+cleanwins_da = xr.DataArray(cleanwins_df.values, dims = ('teammate', 'player'),
+                                    coords = {'teammate': cleanwins_df.index, 'player':cleanwins_df.columns})
+cleanwinsplayed_da = xr.DataArray(cleanwinsplayed_df.values, dims=('teammate', 'player'),
+                                coords = {'teammate':cleanwins_df.index, 'player': cleanwins_df.columns})
 receivedgoals_attack_defense_da = xr.DataArray(receivedgoals_attack_defense_df.values, dims = ('defender', 'attacker_rival'),
                                       coords = {'defender': receivedgoals_attack_defense_df.index, 'attacker_rival': receivedgoals_attack_defense_df.columns})
 receivedgoals_defense_defense_da = xr.DataArray(receivedgoals_defense_defense_df.values, dims = ('defender', 'defender_rival'),
@@ -337,6 +369,8 @@ dataset = xr.Dataset({"Teammates": mates_da,
                       "CloseWins": closewins_da,
                       "CloseMatches": closematches_da,
                       "CloseWinsPlayed": closewinsplayed_da,
+                      "CleanWins": cleanwins_da,
+                      "CleanWinsPlayed": cleanwinsplayed_da,
                       "ReceivedGoalsAttackDefense": receivedgoals_attack_defense_da,
                       "ReceivedGoalsDefenseDefense": receivedgoals_defense_defense_da,
                       "ReceivedGoalsGamesAttackDefense": receivedgoals_games_attack_defense_da,

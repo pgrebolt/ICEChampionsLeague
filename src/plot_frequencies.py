@@ -31,6 +31,8 @@ def heatmap_frequencies(matrix, ax, integer=False, cmap = 'YlGn'):
     # Plot heatmap
     if cmap == 'RdYlGn':
         ax.imshow(matrix, cmap = cmap, aspect = 'equal', vmin = 0, vmax = 1)
+    elif cmap == "YlGnBu_r":
+        ax.imshow(matrix, cmap =cmap, aspect='equal', vmin = 0., vmax = 0.5)
     else:
         ax.imshow(matrix, cmap = cmap, aspect = 'equal')
 
@@ -59,6 +61,7 @@ teammatesclosewins_played = dataarray['CloseWinsPlayed'].values # relative numbe
 receivedgoals_games_attack_defense = dataarray['ReceivedGoalsGamesAttackDefense'].values # received goals per game by each attacker when playing on defense
 receivedgoals_games_defense_defense = dataarray['ReceivedGoalsGamesDefenseDefense'].values # received goals per game by each defender when playing on defense
 receivedgoals_games_defense = dataarray['ReceivedGoalsGamesDefense'].values # received goals per game by each player when playing on defense
+cleanwins_played = dataarray['CleanWinsPlayed'].values
 
 # Convert values to int while keeping NaNs in selected parameters
 teammates = np.where(np.isnan(teammates), np.nan, teammates.astype(int))
@@ -80,6 +83,7 @@ heatmap_frequencies(teammatesclosewins_played, axs[5], cmap = 'RdYlGn') # la par
 heatmap_frequencies(receivedgoals_games_attack_defense, axs[6], cmap='RdYlGn_r') # TODO: CANVIAR COLORMAP
 heatmap_frequencies(receivedgoals_games_defense_defense, axs[7], cmap='RdYlGn_r')
 heatmap_frequencies(receivedgoals_games_defense, axs[8], cmap='RdYlGn_r')
+heatmap_frequencies(cleanwins_played, axs[9], cmap = 'YlGnBu_r')
 
 # Add tick labels
 axs[0].set_title("Games played")
@@ -91,14 +95,15 @@ axs[5].set_title("Close wins / Close games")
 axs[6].set_title("Goals scored ratio to each defender (attacker)")
 axs[7].set_title("Goals scored ratio to each defender (defender)")
 axs[8].set_title("Goals scored ratio to each defender (any position)")
+axs[9].set_title("Clean wins (3-0 / 0-3) / Games played")
 
-for i in range(9):
+for i in range(10):
     axs[i].set_xticks(ticks=np.arange(len(players_names)))
     axs[i].set_xticklabels(players_names, rotation=90, fontsize=8)
     axs[i].set_yticks(ticks=np.arange(len(players_names)))
     axs[i].set_yticklabels(players_names, rotation=0, fontsize=8)
 
-    if i < 6:
+    if ((i < 6) or (i == 9)):
         ylabel = "Team mate"
         xlabel = "Player"
     else:
@@ -112,5 +117,11 @@ for i in range(9):
 
     axs[i].set_ylabel(ylabel)
     axs[i].set_xlabel(xlabel)
-plt.savefig('../results/frequencies.png', dpi=300, bbox_inches='tight')
+
+if season == 'historical':
+    output_name = f'../results/frequencies_{season}.png'
+else:
+    output_name = f'../results/frequencies_Season_{season}.png'
+
+plt.savefig(output_name, dpi=300, bbox_inches='tight')
 dataarray.close()
