@@ -62,7 +62,7 @@ sns.set_style('whitegrid')
 plt.rcParams['figure.figsize'] = (12, 6)
 
 # set random seed for reproducibility
-RND_STATE = None
+RND_STATE = 42 #None
 np.random.seed(RND_STATE)
 
 ''' Aquest codi utilitza un model XGBoost per predir els resultats dels partits a partir de les estadístiques dels jugadors. '''
@@ -117,12 +117,17 @@ player_codes_dict = {players_names[i]: player_codes[i] for i in range(len(player
 #                          'ELODefenseAttackDifference', 'CloseWinsLocal',
 #                          'CloseWinsVisitant', 'ReceivedGoalsDDLocal', 'ReceivedGoalsDDVisitant',
 #                          'ReceivedGoalsADLocal', 'ReceivedGoalsADVisitant', 'WinsLocal', 'WinsVisitant']
-considered_stats_defense = ['WinDefensePlayed', 'WinPlayedMatchday', 'ReceivedDefensePlayed']
-considered_stats_attack = ['WinAttackPlayed', 'WinPlayedMatchday', 'ScoredAttackPlayed', 'NeatGoalsPlayed']
+considered_stats_defense = ['WinDefensePlayed', 'ReceivedDefensePlayed']
+considered_stats_attack = ['WinAttackPlayed', 'ScoredAttackPlayed']
+considered_stats_defense, considered_stats_attack = [], []
 considered_stats_teams = ['ELOAttackDefenseDifference',
                           'ELODefenseAttackDifference',
                           'ELODifference',
-                          'WinsLocal', 'WinsVisitant', 'CloseWinsPlayedLocal', 'CloseWinsPlayedVisitant']
+                          'WeightedELODifference',
+                          'WinsDifference', 'CloseWinsDifference',
+                          'NeatGoalsAttackDifference', 'NeatGoalsDefenseDifference',
+                          'WinsMatchdayDifference',
+                          'ReceivedGoalsDefenseDefenseDifference', 'ReceivedGoalsAttackDefenseDifference']
 print("\nChosen parameters for defense:", considered_stats_defense)
 print("Chosen parameters for attack:", considered_stats_attack)
 print("Chosen parameters for teams:", considered_stats_teams)
@@ -133,10 +138,42 @@ print()
 columns = [stat_def+'1' for stat_def in considered_stats_defense] + [stat_att+'2' for stat_att in considered_stats_attack] +\
             [stat_def+'3' for stat_def in considered_stats_defense] + [stat_att+'4' for stat_att in considered_stats_attack] # noms de les columnes
 feature_names = columns + considered_stats_teams
-print(len(feature_names))
 Stats_training = pd.DataFrame(columns = feature_names)
 #print(Stats_training.columns)
 #Stats_training = pd.DataFrame(columns = ['ELODiffAttack'])
+
+def calculate_differential_head2head(xarr, stat, match_dataframe, match_number, player_local = 'Jugador 1', player_visitant = 'Jugador 3'):
+    '''
+    El calcula la diferència d'un paràmetre entre dos jugadors que juguen a la mateixa posició però en equips contraris
+    :param xarr: xarray amb les estadístiques dels jugadors
+    :param stat: estatística que volem comparar
+    :param match_dataframe: dades del partit, on hi ha els noms dels jugadors
+    :param match_number: número del partit que volem analitzar
+    :return: diferència del paràmetre entre els dos jugadors
+    '''
+    values_local = xarr.sel(match=match_number, player=match_dataframe[player_local])[stat].values.item()
+    values_visitant = xarr.sel(match=match, player=match_dataframe[player_visitant])[stat].values.item()
+
+    differential = values_local - values_visitant
+    return differential
+
+
+def calculate_differential_opositeposition(xarr, stat_local, stat_visitant, match_dataframe, match_number, player_local='Jugador 1',
+                                     player_visitant='Jugador 3'):
+  '''
+  El calcula la diferència d'un paràmetre entre dos jugadors que juguen en posicions oposades (atacant vs defensor)
+  :param xarr: xarray amb les estadístiques dels jugadors
+  :param stat: estatística que volem comparar
+  :param match_dataframe: dades del partit, on hi ha els noms dels jugadors
+  :param match_number: número del partit que volem analitzar
+  :return: diferència del paràmetre entre els dos jugadors
+  '''
+  values_local = xarr.sel(match=match_number, player=match_dataframe[player_local])[stat_local].values.item()
+  values_visitant = xarr.sel(match=match, player=match_dataframe[player_visitant])[stat_visitant].values.item()
+
+  differential = values_local - values_visitant
+  return differential
+
 
 for match in range(1, matches_df.shape[0]): # per cada partit disputat
 #for match in range(int(0.2*matches_df.shape[0])+1, matches_df.shape[0]+1): # per cada partit disputat. Treiem els primers partits que no representen l'ELO real dels jugadors
@@ -145,55 +182,79 @@ for match in range(1, matches_df.shape[0]): # per cada partit disputat
     #matchday = match_df['Total_D']-1 # número de matchday
     # Llista on hi desarem els valors des les estadístiques de cada jugador que hi ha al camp, amb el mateix ordre que `columns`
     stats_match = []
-    for player in match_df[['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4']]:
-        if (player == match_df['Jugador 1']) or (player == match_df['Jugador 3']): # defensors
-            # Triem les estadístiques dels jugadors en aquest partit
-            player_stats = stats_xr.sel(match=match, player=player)[considered_stats_defense].to_array().values
-        elif (player == match_df['Jugador 2']) or (player == match_df['Jugador 4']): # atacants
-            # Triem les estadístiques dels jugadors en aquest partit
-            player_stats = stats_xr.sel(match=match, player=player)[considered_stats_attack].to_array().values
-        stats_match = stats_match + list(player_stats) # adjuntem les estadístiques del jugador a les dades d'aquest partit
+    #REMOVED INDIVIDUAL PERFORMANCE FACTORS
+    #for player in match_df[['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4']]:
+    #    if (player == match_df['Jugador 1']) or (player == match_df['Jugador 3']): # defensors
+    #        # Triem les estadístiques dels jugadors en aquest partit
+    #        player_stats = stats_xr.sel(match=match, player=player)[considered_stats_defense].to_array().values
+    #    elif (player == match_df['Jugador 2']) or (player == match_df['Jugador 4']): # atacants
+    #        # Triem les estadístiques dels jugadors en aquest partit
+    #        player_stats = stats_xr.sel(match=match, player=player)[considered_stats_attack].to_array().values
+    #    stats_match = stats_match + list(player_stats) # adjuntem les estadístiques del jugador a les dades d'aquest partit
 
-    # Afegim a la llista paràmetres del partit, creuant els dos equips
-    elo_attack_difference = (stats_xr.sel(match=match, player=match_df['Jugador 2'])['ELOAttack'].values.item() -
-                             stats_xr.sel(match=match, player=match_df['Jugador 4'])['ELOAttack'].values.item())
-    elo_defense_difference = (stats_xr.sel(match=match, player=match_df['Jugador 1'])['ELODefense'].values.item() -
-                             stats_xr.sel(match=match, player=match_df['Jugador 3'])['ELODefense'].values.item())
-    elo_difference = ( (stats_xr.sel(match=match, player=match_df['Jugador 1']))['ELODefense'].values.item() +
-                       (stats_xr.sel(match=match, player=match_df['Jugador 2']))['ELOAttack'].values.item() -
-                       ((stats_xr.sel(match=match, player=match_df['Jugador 3']))['ELODefense'].values.item() +
-                       (stats_xr.sel(match=match, player=match_df['Jugador 4']))['ELOAttack'].values.item() ))
-    elo_attackh_defensea_difference = (stats_xr.sel(match=match, player=match_df['Jugador 2'])['ELOAttack'].values.item() -
-                              stats_xr.sel(match=match, player=match_df['Jugador 3'])['ELODefense'].values.item()) # diferència ELO atacant-defensor rivals
-    elo_defenseh_attacka_difference = (stats_xr.sel(match=match, player=match_df['Jugador 1'])['ELODefense'].values.item() -
-                              stats_xr.sel(match=match, player=match_df['Jugador 4'])['ELOAttack'].values.item())
+    # --- Paràmetres individuals dels jugadors ---
+    # ELO
+    elo_attack_difference = calculate_differential_head2head(stats_xr, 'ELOAttack', match_df, match, player_local='Jugador 2', player_visitant='Jugador 4')
+    elo_defense_difference = calculate_differential_head2head(stats_xr, 'ELODefense', match_df, match, player_local='Jugador 1', player_visitant='Jugador 3')
+
+    elo_difference = elo_attack_difference + elo_defense_difference
+
+    weighted_elo_difference = ( (stats_xr.sel(match=match, player=match_df['Jugador 1']))['WeightedELO'].values.item() +
+                       (stats_xr.sel(match=match, player=match_df['Jugador 2']))['WeightedELO'].values.item() -
+                       ((stats_xr.sel(match=match, player=match_df['Jugador 3']))['WeightedELO'].values.item() +
+                       (stats_xr.sel(match=match, player=match_df['Jugador 4']))['WeightedELO'].values.item() ))
+
+    # Neat goals
+    neatgoals_attack_difference = calculate_differential_head2head(stats_xr, 'NeatGoalsAttackPlayed', match_df, match, player_local='Jugador 2', player_visitant='Jugador 4')
+    neatgoals_defense_difference = calculate_differential_head2head(stats_xr, 'NeatGoalsDefensePlayed', match_df, match, player_local='Jugador 1', player_visitant='Jugador 3')
+
+    # Nombre de partits guanyats en aquest dia
+    winsmatchday_difference = ((stats_xr.sel(match=match, player=match_df['Jugador 1']))['WinPlayedMatchday'].values.item() +
+                           (stats_xr.sel(match=match, player=match_df['Jugador 2']))['WinPlayedMatchday'].values.item() -
+                           ((stats_xr.sel(match=match, player=match_df['Jugador 3']))['WinPlayedMatchday'].values.item() +
+                            (stats_xr.sel(match=match, player=match_df['Jugador 4']))['WinPlayedMatchday'].values.item()))
+
+    # Diferència d'ELO entre l'atacant d'un equip i el defensor de l'altre
+    elo_attackh_defensea_difference = calculate_differential_opositeposition(stats_xr, 'ELOAttack', 'ELODefense', match_df, match, player_local='Jugador 2', player_visitant='Jugador 3')
+    elo_defenseh_attacka_difference = calculate_differential_opositeposition(stats_xr, 'ELODefense', 'ELOAttack', match_df, match, player_local='Jugador 1', player_visitant='Jugador 4')
+
+    # --- Paràmetres d'equip ---
+    # Victòries en partits ajustats
     close_wins_local = frequencies_xr.sel(teammate=match_df['Jugador 1'], player = match_df['Jugador 2'])['CloseWinsPlayed'].values.item()
     close_wins_visitant = frequencies_xr.sel(teammate=match_df['Jugador 3'], player = match_df['Jugador 4'])['CloseWinsPlayed'].values.item()
+    if np.isnan(close_wins_local): # Per CloseWinsPlayed, fem que el valor sigui 0.5 si l'original és NaN, que vol dir que no han jugat mai un Close Match junts
+      close_wins_local = 0.5
+    if np.isnan(close_wins_visitant):
+        close_wins_visitant = 0.5
+    close_wins_difference = close_wins_local - close_wins_visitant
+
+    # Gols rebuts d'un defensor contra l'altre defensor i contra l'atacant rival
+    # 'defender' rep els gols de 'defender_rival' o 'attacker_rival'
     receivedgoals_defense_defense_local = frequencies_xr.sel(defender = match_df['Jugador 1'], defender_rival = match_df['Jugador 3'])['ReceivedGoalsGamesDefenseDefense'].values.item()
     receivedgoals_defense_defense_visitant = frequencies_xr.sel(defender = match_df['Jugador 3'], defender_rival = match_df['Jugador 1'])['ReceivedGoalsGamesDefenseDefense'].values.item()
     receivedgoals_attack_defense_local = frequencies_xr.sel(defender = match_df['Jugador 1'], attacker_rival = match_df['Jugador 4'])['ReceivedGoalsGamesAttackDefense'].values.item()
     receivedgoals_attack_defense_visitant = frequencies_xr.sel(defender = match_df['Jugador 3'], attacker_rival = match_df['Jugador 2'])['ReceivedGoalsGamesAttackDefense'].values.item()
+    receivedgoals_defense_defense_difference = receivedgoals_defense_defense_local - receivedgoals_defense_defense_visitant
+    receivedgoals_attack_defense_difference = receivedgoals_attack_defense_local - receivedgoals_attack_defense_visitant
+
+    # Nombre de partits guanyats per cada equip
     team_wins_local = frequencies_xr.sel(teammate = match_df['Jugador 1'], player = match_df['Jugador 2'])['TeammatesWinsPlayed'].values.item()
     team_wins_visitant = frequencies_xr.sel(teammate = match_df['Jugador 3'], player = match_df['Jugador 4'])['TeammatesWinsPlayed'].values.item()
+    team_wins_difference = team_wins_local - team_wins_visitant
 
-    # Per CloseWinsPlayed, fem que el valor sigui 0.5 si l'original és NaN, que vol dir que no han jugat mai un Close Match junts
-    if np.isnan(close_wins_local):
-      close_wins_local = 0.5
-    if np.isnan(close_wins_visitant):
-        close_wins_visitant = 0.5
-
-#    stats_match = stats_match + [elo_attack_difference, elo_defense_difference, elo_attackh_defensea_difference, elo_defenseh_attacka_difference,
-#                                 close_wins_local, close_wins_visitant,
-#                                 receivedgoals_defense_defense_local, receivedgoals_defense_defense_visitant,
-#                                 receivedgoals_attack_defense_local, receivedgoals_attack_defense_visitant,
-#                                 team_wins_local, team_wins_visitant]
+    # --- Agrupació de dades ---
+    # Agrupem totes les dades del partit en una sola llista, que serà la fila de la matriu `X` corresponent a aquest partit. L'ordre dels paràmetres ha de ser el mateix que el de les columnes de `Stats_training`
     stats_match = stats_match + [elo_attackh_defensea_difference, elo_defenseh_attacka_difference,
-                                     elo_difference, team_wins_local, team_wins_visitant, close_wins_local, close_wins_visitant]
+                                     elo_difference, weighted_elo_difference, team_wins_difference, close_wins_difference,
+                                 neatgoals_attack_difference, neatgoals_defense_difference, winsmatchday_difference,
+                                 receivedgoals_defense_defense_difference, receivedgoals_attack_defense_difference]
+
     # Afegim el codi numèric de cada jugador
     #player_codes_match = [player_codes_dict[match_df['Jugador 1']], player_codes_dict[match_df['Jugador 2']],
     #                      player_codes_dict[match_df['Jugador 3']], player_codes_dict[match_df['Jugador 4']]]
     #stats_match = player_codes_match + stats_match
 
+    # --- Desament de les dades ---
     # Desem la llista d'estadístiques d'aquest partit
     Stats_training.loc[len(Stats_training)] = stats_match
 
@@ -521,8 +582,8 @@ ax.set_xlabel('Model')
 ax.set_ylabel('Metric')
 
 plt.tight_layout()
-plt.show()
-#plt.savefig("../results/classification_metrics_comparison.png", dpi=300, bbox_inches='tight')
+#plt.show()
+plt.savefig("../results/classification_metrics_comparison.png", dpi=300, bbox_inches='tight')
 
 print("\nVisualisations generated successfully.")
 
@@ -560,8 +621,8 @@ ax.set_title('XGBoost feature importance')
 ax.invert_yaxis()
 
 plt.tight_layout()
-plt.show()
-#plt.savefig("../results/feature_importance_comparison.png", dpi=300, bbox_inches='tight')
+#plt.show()
+plt.savefig("../results/feature_importance_comparison.png", dpi=300, bbox_inches='tight')
 
 print("Feature importance analysis complete.")
 
