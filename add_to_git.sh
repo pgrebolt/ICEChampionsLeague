@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Add to git
+git add results/frequencies_Season_*.png
 git add results/ELO_stats_season_*.png
-git add results/frequencies.png
 git add results/standings.md
 git add results/winplayed_stats.html
 git add results/winplayed_stats_season_*.png
