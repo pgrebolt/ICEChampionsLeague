@@ -15,7 +15,7 @@ import pandas as pd
 "Read the stored NetCDF4 file, where the data is stored."
 # Llegim les dades
 # Carreguem les dades
-season = '5' # 2,3, 4, historical
+season = '6' # 2,3, 4, historical
 if season == 'historical':
     dataarray = xr.open_dataset(f'../generated_files/teammates_{season}.nc', engine='scipy') # fitxer amb les dades de les estadístiques
 else:

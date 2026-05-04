@@ -7,7 +7,8 @@ sheet_id = "1pN_5Ulttdi5cmj1nlE_vzwZG4n8n_prxm6blmtu5L2U"  # replace with your a
 gid_dict = {'Season 2': '1546699619',
             'Season 3': '1943224824',
             'Season 4': '145438050',
-            'Season 5': '2141771608'} # diccionari amb els gid de cada temporada
+            'Season 5': '2141771608',
+            'Season 6': '204430416'} # diccionari amb els gid de cada temporada
 
 #gid = "145438050" #Season 4
 # gid = "1943224824"  # default is usually 0; change if needed for other tabs

@@ -28,7 +28,7 @@ plt.rcParams['axes.prop_cycle'] = plt.cycler(color=plt.cm.tab20.colors)
 
 # Llegim les dades
 # Carreguem les dades
-season = 'historical' # 2,3, 4, 5 historical
+season = '6' # 2,3, 4, 5 historical
 if season == 'historical':
     results_df = pd.read_csv(f'../generated_files/results_{season}.csv') # fitxer amb les dades dels partits
     dataarray = xr.open_dataset(f'../generated_files/stats_{season}.nc', engine='scipy') # fitxer amb les dades de les estadístiques
