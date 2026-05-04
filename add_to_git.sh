@@ -18,7 +18,7 @@ git add results/winplayed_stats_historical.png
 
 
 ## Extract matchday number
-file="generated_files/results_Season_5.csv"
+file="generated_files/results_Season_6.csv"
 last_line=$(tail -n 1 "$file")
 matchday="${last_line:0:2}"
 echo "Last matchday number is $matchday"
