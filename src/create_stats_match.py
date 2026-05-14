@@ -144,35 +144,6 @@ def update_elo(results_df, parameters):
     R_away_attacker_new = R_away_attacker + K * (S_away - P_away) * r_attacker_away / r_away
     #print(R_away_defender, S_away, P_away, r_defender_away, r_attacker_away, r_away, R_away_defender_new, R_away_attacker_new)
 
-    ## ELO ponderat
-    if first_game:
-        # Si és el primer partit, assignem un ELO ponderat neutre (0.5)
-        weighted_ELO = {players_names[player_index]: 0.5 for player_index in range(len(players_names))}
-    else:
-        # Normalizem ELOs (normalització min-max)
-        defense_rng = max(parameters['ELODefense'][-1]) - min(parameters['ELODefense'][-1]) # denominador (max - min)
-        attack_rng = max(parameters['ELOAttack'][-1]) - min(parameters['ELOAttack'][-1])
-        defense_rng = defense_rng if defense_rng != 0 else 1  # Evitem divisió per 0
-        attack_rng = attack_rng if attack_rng != 0 else 1  # Evitem divisió per 0
-        normalized_ELO_defense = [(parameters['ELODefense'][-1][player_index] - min(parameters['ELODefense'][-1])) / defense_rng for player_index in range(len(players_names))]
-        normalized_ELO_attack = [(parameters['ELOAttack'][-1][player_index] - min(parameters['ELOAttack'][-1])) / attack_rng for player_index in range(len(players_names))]
-        if np.all(normalized_ELO_defense==np.float64(0.)): # pel primer partit, assignar manualment els pesos a 0.5
-            normalized_ELO_defense = 0.5*np.ones(len(players_names))
-        if np.all(normalized_ELO_attack == np.float64(0.)):
-            normalized_ELO_attack = 0.5*np.ones(len(players_names))
-        # Calculem el valor ponderat
-        weight_attack = np.divide(parameters['PlayedAttack'][-1], parameters['GamesPlayed'][-1],
-                                  out=np.zeros_like(parameters['PlayedAttack'][-1]), where=parameters['GamesPlayed'][-1]!=0)
-        weight_defense = np.divide(parameters['PlayedDefense'][-1], parameters['GamesPlayed'][-1],
-                                  out=np.zeros_like(parameters['PlayedDefense'][-1]),
-                                  where=parameters['GamesPlayed'][-1] != 0)
-    #    weight_attack = parameters['PlayedAttack'][-1] / parameters['GamesPlayed'][-1]
-        #weight_defense = parameters['PlayedDefense'][-1] / parameters['GamesPlayed'][-1]
-        #weight_attack = np.where(weight_attack==np.nan, 1., weight_attack)  # Evitem NaN (si no s'ha jugat cap partit encara)
-        #weight_defense = np.where(weight_defense==np.nan, 1., weight_defense)
-
-        weighted_ELO = {players_names[player_index]: weight_defense[player_index] * normalized_ELO_defense[player_index] + weight_attack[player_index] * normalized_ELO_attack[player_index] for player_index in range(len(players_names))}
-
     ## Retornem els nous ELOs
     if first_game:
         # Llista amb els ELO després del primer partit
@@ -182,6 +153,9 @@ def update_elo(results_df, parameters):
         first_elos_attack[home_attacker_index] = R_home_attacker_new
         first_elos_defense[away_defender_index] = R_away_defender_new
         first_elos_attack[away_attacker_index] = R_away_attacker_new
+
+        # Si és el primer partit, assignem un ELO ponderat neutre (ELO_inicial)
+        weighted_ELO = {players_names[player_index]: initial_ELO for player_index in range(len(players_names))}
 
         # Retorn en forma de diccionari
         return ({players_names[player_index]: first_elos_defense[player_index] for player_index in range(len(players_names))},
@@ -195,10 +169,25 @@ def update_elo(results_df, parameters):
         parameters['ELODefense'][-1][away_defender_index] = R_away_defender_new
         parameters['ELOAttack'][-1][away_attacker_index] = R_away_attacker_new
 
+        ## ELO ponderat. Igualment, només pels jugadors d'aquest partit
+        for current_game_player_index in [home_defender_index, home_attacker_index, away_defender_index, away_attacker_index]:
+            # Calculem les ponderacions
+            if parameters['GamesPlayed'][-1][current_game_player_index] !=0:
+                weight_attack = parameters['PlayedAttack'][-1][current_game_player_index] / parameters['GamesPlayed'][-1][current_game_player_index]
+                weight_defense = parameters['PlayedDefense'][-1][current_game_player_index] / parameters['GamesPlayed'][-1][current_game_player_index]
+
+                # Calculem l'ELO ponderat
+                parameters['WeightedELO'][-1][current_game_player_index] = weight_defense * parameters['ELODefense'][-1][current_game_player_index] +\
+                                weight_attack * parameters['ELOAttack'][-1][current_game_player_index]
+            else: # si és el primer partit del jugador, assignem un ELO ponderat neutre (ELO_inicial)
+                parameters['WeightedELO'][-1][current_game_player_index] = initial_ELO
+
+
         # Tornem un diccionari per atac, un altre per defensa i un altre per weighted
         return ({players_names[player_index]: parameters['ELODefense'][-1][player_index] for player_index in range(len(players_names))},
                 {players_names[player_index]: parameters['ELOAttack'][-1][player_index] for player_index in range(len(players_names))},
-                weighted_ELO)
+                {players_names[player_index]: parameters['WeightedELO'][-1][player_index] for player_index in range(len(players_names))},
+                )
 
 
 # Obtenim una llista amb tots els noms dels participants

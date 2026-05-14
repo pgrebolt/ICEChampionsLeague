@@ -128,7 +128,7 @@ axs[7].set_ylabel("Weighted ELO")
 for i in range(len(axs)):
     axs[i].set_xlim(-0.5, matchdays[-1]+0.5)
 
-axs[6].set_ylim(-0.05, 0.25)
+#axs[6].set_ylim(-0.05, 0.25)
 
 for i in [-1, -2]:
     axs[i].set_xlabel('Matchday')
@@ -218,7 +218,7 @@ if season == 'historical':
 fig.legend(bbox_to_anchor = ( 0.5, 0.9), ncol = 5, loc = 'lower center')
 
 # y lim for Weighted ELO
-axs[2].set_ylim(-0.1, 1.1)
+#axs[2].set_ylim(-0.1, 1.1)
 
 # Afegim l'etiqueta del dia d'avui
 fig.text(0.91, 0.91, f"Last updated: {today}", transform=fig.transFigure)
