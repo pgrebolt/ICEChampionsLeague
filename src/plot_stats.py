@@ -5,6 +5,7 @@
 
 import asyncio
 import sys
+import argparse
 
 if sys.platform.startswith('win'):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -26,9 +27,20 @@ today = datetime.today().strftime('%d/%m/%Y')
 # Definim tab20 com la paleta per defecte dels plots
 plt.rcParams['axes.prop_cycle'] = plt.cycler(color=plt.cm.tab20.colors)
 
-# Llegim les dades
-# Carreguem les dades
-season = '6' # 2,3, 4, 5 historical
+## Carreguem les dades amb el parser
+# Creem el parser
+parser = argparse.ArgumentParser(
+                    prog='ICE Champions Leage',
+                    description='Full pipeline computing the statistics of the ICE Champions League',
+                    )
+# Afegim els arguments
+parser.add_argument('-s', '--season', type=str, default='historical', help='Season to analyze (2, 3, 4, historical)')
+
+# Recuperem season de l'argument
+season = parser.parse_args().season
+
+##Llegim les dades
+#season = '6' # 2,3, 4, 5 historical
 if season == 'historical':
     results_df = pd.read_csv(f'../generated_files/results_{season}.csv') # fitxer amb les dades dels partits
     dataarray = xr.open_dataset(f'../generated_files/stats_{season}.nc', engine='scipy') # fitxer amb les dades de les estadístiques

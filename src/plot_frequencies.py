@@ -5,6 +5,7 @@
 "First, we import the required libraries."
 import asyncio
 import sys
+import argparse
 if sys.platform.startswith('win'):
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 import matplotlib.pyplot as plt
@@ -14,8 +15,20 @@ import pandas as pd
 
 "Read the stored NetCDF4 file, where the data is stored."
 # Llegim les dades
-# Carreguem les dades
-season = '6' # 2,3, 4, historical
+## Carreguem les dades amb el parser
+# Creem el parser
+parser = argparse.ArgumentParser(
+                    prog='ICE Champions Leage',
+                    description='Full pipeline computing the statistics of the ICE Champions League',
+                    )
+# Afegim els arguments
+parser.add_argument('-s', '--season', type=str, default='historical', help='Season to analyze (2, 3, 4, historical)')
+
+# Recuperem season de l'argument
+season = parser.parse_args().season
+
+##Llegim les dades
+#season = '6' # 2,3, 4, historical
 if season == 'historical':
     dataarray = xr.open_dataset(f'../generated_files/teammates_{season}.nc', engine='scipy') # fitxer amb les dades de les estadístiques
 else:
