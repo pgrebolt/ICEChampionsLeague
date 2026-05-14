@@ -34,8 +34,6 @@ parser.add_argument('-s', '--season', type=str, default='historical', help='Seas
 # Recuperem season de l'argument
 season = parser.parse_args().season
 
-print(season)
-input()
 ##Llegim les dades
 #season = '6' # 2,3, 4, historical
 #season = "historical"
