@@ -31,8 +31,16 @@ season = parser.parse_args().season
 #season = '6' # 2,3, 4, historical
 if season == 'historical':
     dataarray = xr.open_dataset(f'../generated_files/teammates_{season}.nc', engine='scipy') # fitxer amb les dades de les estadístiques
+
+    folder_label = 'historical/' # nom de la carpeta on es guarden els resultats
+    file_label = 'historical' # sufix per posar als noms dels fitxers
+
 else:
     dataarray = xr.open_dataset(f'../generated_files/teammates_Season_{season}.nc', engine='scipy')
+
+    folder_label = 'Season' + season + '/'
+    file_label = 'Season_' + season
+
 
 "Store the list of all the players."
 # List of all player names (ordered)"
@@ -136,5 +144,5 @@ if season == 'historical':
 else:
     output_name = f'../results/frequencies_Season_{season}.png'
 
-plt.savefig(output_name, dpi=300, bbox_inches='tight')
+plt.savefig('../results/'+folder_label+'frequencies_'+file_label+'.png', dpi=300, bbox_inches='tight')
 dataarray.close()

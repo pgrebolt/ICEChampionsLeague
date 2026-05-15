@@ -44,9 +44,16 @@ season = parser.parse_args().season
 if season == 'historical':
     results_df = pd.read_csv(f'../generated_files/results_{season}.csv') # fitxer amb les dades dels partits
     dataarray = xr.open_dataset(f'../generated_files/stats_{season}.nc', engine='scipy') # fitxer amb les dades de les estadístiques
+
+    folder_label = 'historical/' # nom de la carpeta on es guarden els resultats
+    file_label = 'historical' # sufix per posar als noms dels fitxers
+
 else:
     results_df = pd.read_csv(f'../generated_files/results_Season_{season}.csv')
     dataarray = xr.open_dataset(f'../generated_files/stats_Season_{season}.nc', engine='scipy')
+
+    folder_label = 'Season' + season + '/'
+    file_label = 'Season_' + season
 
 ## Extraiem els dies on es canvia de temporada
 if season == 'historical':
@@ -83,7 +90,7 @@ caption = "Games won / Games played (Matchday %.1d)" % (matchdays[-1])
 winplayed_stats = winplayed_stats.style.set_caption(caption) # afegim títol al dataframe
 
 # Guardem la taula en HTML per mostrar-la al README
-winplayed_stats.to_html('../results/winplayed_stats.html')
+winplayed_stats.to_html('../results/'+folder_label+'winplayed_stats'+file_label+'.html')
 
 # ### Gràfic
 
@@ -159,11 +166,7 @@ fig.text(0.75, 0.91, f"Last updated: {today}", transform=fig.transFigure)
 # Guardem la figura per poderla posar al README
 plt.subplots_adjust(hspace=0.2)
 
-if season == 'historical':
-    output_name = 'winplayed_stats_historical.png'
-else:
-    output_name = 'winplayed_stats_season_' + season + '.png'
-plt.savefig('../results/'+output_name, dpi=300, bbox_inches='tight')
+plt.savefig('../results/'+folder_label+'winplayed_stats_'+file_label+'.png', dpi=300, bbox_inches='tight')
 
 
 # ### Plot ELO
@@ -241,7 +244,7 @@ if season == 'historical':
     output_name = 'ELO_stats_historical.png'
 else:
     output_name = 'ELO_stats_season_' + season + '.png'
-plt.savefig('../results/'+output_name, dpi=300, bbox_inches='tight')
+plt.savefig('../results/'+folder_label+'ELO_stats_'+file_label+'.png', dpi=300, bbox_inches='tight')
 
 # # Scatter plots
 # Aquests gràfics en permeten comparar paràmetres de jugadors directament els uns amb els altres.
@@ -277,7 +280,7 @@ for i in range(4):
         axs[i].plot([3, 0], [0, 1])
 
 #plt.show()
-plt.savefig("../results/scatter_plots.png", dpi=300, bbox_inches='tight')
+plt.savefig('../results/'+folder_label+'scatter_plots'+file_label+'.png', dpi=300, bbox_inches='tight')
 
 dataarray.close()
 
