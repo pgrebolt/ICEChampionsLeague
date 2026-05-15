@@ -1,20 +1,18 @@
 #!/bin/bash
 
 # Add to git
-git add results/frequencies_Season_*.png
-git add results/ELO_stats_season_*.png
+git add results/Season*/frequencies_Season_*.png
+git add results/Season*/ELO_stats_season_*.png
 git add results/standings.md
 git add results/winplayed_stats.html
-git add results/winplayed_stats_season_*.png
+git add results/Season*winplayed_stats_season_*.png
 git add generated_files/results_Season_*.csv
 git add generated_files/stats_Season_*.nc
 git add generated_files/teammates_Season_*.nc
 git add generated_files/results_historical.csv
 git add generated_files/stats_historical.nc
 git add generated_files/teammates_historical.nc
-git add results/ELO_stats_historical.png
-git add results/frequencies_historical.png
-git add results/winplayed_stats_historical.png
+git add results/historical/
 
 
 ## Extract matchday number
