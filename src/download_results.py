@@ -1,8 +1,21 @@
 import requests
 import pandas as pd
 import numpy as np
+import argparse
 
-# Your sheet's info
+## Carreguem les dades amb el parser
+# Creem el parser
+parser = argparse.ArgumentParser(
+                    prog='ICE Champions Leage',
+                    description='Full pipeline computing the statistics of the ICE Champions League',
+                    )
+# Afegim els arguments
+parser.add_argument('-s', '--season', type=str, default='historical', help='Season to analyze (2, 3, 4, historical)')
+
+# Recuperem season de l'argument
+season_num = parser.parse_args().season
+
+# Sheets info
 sheet_id = "1pN_5Ulttdi5cmj1nlE_vzwZG4n8n_prxm6blmtu5L2U"  # replace with your actual Sheet ID
 gid_dict = {'Season 2': '1546699619',
             'Season 3': '1943224824',
@@ -25,8 +38,7 @@ historical_results = pd.DataFrame()
 
 matchday_offset = 0  # Initialize matchday offset
 
-# Loop through each season and download the corresponding CSV
-for season, gid in gid_dict.items():
+def download_and_process_csv(season, gid):
     # Download URL
     csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
 
@@ -50,20 +62,36 @@ for season, gid in gid_dict.items():
     # Guardem el csv un altre cop
     df.to_csv(filename, index=False, sep=',')
 
-    ## Afegir al dataframe històric
-    # Afegim una columna de temporada
-    df['Season'] = season.split()[-1]  # Només el número de temporada
+    return df
 
-    # Columna amb el dia de partit des de l'inici del recompte (diferents temporades)
-    df['Total_D'] = df['D'] + matchday_offset
-    df = df[['Total_D'] + [c for c in df.columns if c != 'Total_D']]  # Reorder columns to have 'Total_D' first (passarà a ser 2a)
-    df = df[['Season'] + [c for c in df.columns if c != 'Season']]  # Reorder columns to have 'Season' first
+# Loop through each season and download the corresponding CSV
 
-    # Actualitzem el matchday_offset per a la següent temporada
-    matchday_offset = matchday_offset + df['D'].iloc[-1]
+if season_num == 'historical': # pel cas històric, baixem totes les temporades i les concatenem
+        for s, gid in gid_dict.items():
+            df = download_and_process_csv(s, gid)
 
-    # Afegim els resultats de la Season al dataframe històric
-    historical_results = pd.concat([historical_results, df], ignore_index=True)
+            ## Afegir al dataframe històric
+            # Afegim una columna de temporada
+            df['Season'] = s.split()[-1]  # Només el número de temporada
 
-# Guardem els resultats històrics
-historical_results.to_csv('../generated_files/results_historical.csv', index=False, sep=',')
+            # Columna amb el dia de partit des de l'inici del recompte (diferents temporades)
+            df['Total_D'] = df['D'] + matchday_offset
+            df = df[['Total_D'] + [c for c in df.columns if c != 'Total_D']]  # Reorder columns to have 'Total_D' first (passarà a ser 2a)
+            df = df[['Season'] + [c for c in df.columns if c != 'Season']]  # Reorder columns to have 'Season' first
+
+            # Actualitzem el matchday_offset per a la següent temporada
+            matchday_offset = matchday_offset + df['D'].iloc[-1]
+
+            # Afegim els resultats de la Season al dataframe històric
+            historical_results = pd.concat([historical_results, df], ignore_index=True)
+
+        # Guardem els resultats històrics
+        historical_results.to_csv('../generated_files/results_historical.csv', index=False, sep=',')
+
+else:
+    gid = gid_dict['Season ' + season_num] # obtenim el gid de la temporada seleccionada
+    df = download_and_process_csv('Season ' + season_num, gid) # descarreguem i processem el csv de la temporada seleccionada
+
+print("CSV file downloaded and processed successfully.")
+
+input()

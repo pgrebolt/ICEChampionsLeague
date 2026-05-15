@@ -17,7 +17,7 @@ echo "Running pipeline for season: $season"
 
 .venv\Scripts\activate
 
-py download_results.py
+py download_results.py --season "$season"
 
 py create_stats_match.py --season "$season"
 py create_teamfrequencies.py --season "$season"
