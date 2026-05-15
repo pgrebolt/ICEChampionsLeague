@@ -93,5 +93,3 @@ else:
     df = download_and_process_csv('Season ' + season_num, gid) # descarreguem i processem el csv de la temporada seleccionada
 
 print("CSV file downloaded and processed successfully.")
-
-input()
