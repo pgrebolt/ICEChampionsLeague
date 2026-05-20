@@ -1,44 +1,89 @@
 #!/usr/bin/env python
 # coding: utf-8
-import matplotlib.pyplot as plt
-# ## Endeví de resultats
-# 
-# Aquest codi inclou un model de Deep Learning per predir els resultats d'un partit a partir de les dades històriques de partits.
 
+
+import matplotlib.pyplot as plt
+import seaborn as sns
 import numpy as np
 import pandas as pd
 import xarray as xr
-
-import joblib
-
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import StratifiedKFold, train_test_split, RandomizedSearchCV
-from sklearn.metrics import classification_report, ConfusionMatrixDisplay
 from sklearn import preprocessing
-from sklearn.model_selection import train_test_split
-import xgboost as xgb
+from sklearn.model_selection import GridSearchCV
+from sklearn.decomposition import PCA
+import joblib
 import shap
+from shap import Explainer
+
+from sklearn.metrics import (
+  accuracy_score,
+  precision_score,
+  recall_score,
+  f1_score,
+  roc_auc_score,
+  confusion_matrix,
+  mean_squared_error,
+  r2_score,
+  mean_absolute_error,
+  classification_report,
+  ConfusionMatrixDisplay,
+  RocCurveDisplay
+)
+from sklearn.model_selection import (
+  train_test_split,
+  cross_val_score,
+  KFold,
+  StratifiedKFold
+)
+
+from sklearn.preprocessing import (
+  StandardScaler,
+  LabelEncoder
+)
+
+import xgboost as xgb
+import warnings
+warnings.filterwarnings('ignore')
+
+# set visualisation style
+sns.set_style('whitegrid')
+plt.rcParams['figure.figsize'] = (12, 6)
+
+# set random seed for reproducibility
+RND_STATE = 42 #None
+np.random.seed(RND_STATE)
 
 ''' Aquest codi utilitza un model XGBoost per predir els resultats dels partits a partir de les estadístiques dels jugadors. '''
 
 # Per poder entrenar el model, ens cal donar-li informació de qui està jugant (amb quins punts forts i punts febles) i quin és el resultat. Per tant, hem de llegir el fitxer amb les estadístiques de cada jugador i també el fitxer amb el registre històric de resultats.
+
+###############################################################
+############## Llegir les dades ###############################
+###############################################################
 
 # Llegim l'històric de partits i resultats
 matches_df = pd.read_csv('../generated_files/results_historical.csv')
 
 # Llegim les estadístiques de cada jugador
 stats_xr = xr.open_dataset('../generated_files/stats_historical.nc', engine='scipy')
+print("Individual available parameters:")
+print(list(stats_xr.keys()))
 
 # Llegim les estadístiques creuades (com un jugador es comporta contra un altre)
 frequencies_xr = xr.open_dataset('../generated_files/teammates_historical.nc', engine='scipy')
+print("Team available parameters:")
+print(list(frequencies_xr.keys()))
+
+###############################################################
+############# Crear el dataset amb les dades ##################
+###############################################################
 
 # Construïm una matriu amb els paràmetres dels jugadors a pista (matriu `X`) i una matriu amb el resultat (matriu `y`). La matriu `y` l'extraiem directament de `matches_df`. La matriu `X` la construïm a partir dels jugadors que són a pista a cada partit (de `matches_df`) i les estadístiques de `stats_xr`.
 
 # Ens cal codificar els resultats. Els possibles resultats són 6: '3-0', '3-1', '3-2', '0-3', '1-3', '2-3'. Perquè el model pugui treballar bé, passarem aquests possibles valors a codis (0, 1, 2, 3, 4, 5), a partir dels quals en farem l'entrenament. Per usos futurs, també codificarem el guanyador (local/vistant).
 
 encoder_winning = preprocessing.LabelEncoder() # codificador d'etiquetes ('Local'/'Visitant') a nombres (0/1)
-Results_winning_training = encoder_winning.fit_transform(matches_df['Guanyador'].drop(0).values.astype(str)) # Array amb tots els resultats que farem servir per l'entrenament del model (0='Local', 1='Visitant')
+Results_winning = encoder_winning.fit_transform(matches_df['Guanyador'].drop(0).values.astype(str)) # Array amb tots els resultats que farem servir per l'entrenament del model (0='Local', 1='Visitant')
+print(Results_winning)
 # hem tret el primer partit perquè es faran servir les estadístiques del partit anterior per predir cada resultat, i per al primer partit no hi ha dades prèvies
 
 # El mateix que abans, però per tots els possibles resultats
@@ -68,22 +113,64 @@ player_codes_dict = {players_names[i]: player_codes[i] for i in range(len(player
 #                          'ELODefenseAttackDifference', 'CloseWinsLocal',
 #                          'CloseWinsVisitant', 'ReceivedGoalsDDLocal', 'ReceivedGoalsDDVisitant',
 #                          'ReceivedGoalsADLocal', 'ReceivedGoalsADVisitant', 'WinsLocal', 'WinsVisitant']
-considered_stats_defense = ['WinDefensePlayed', 'WinPlayedMatchday']
-considered_stats_attack = ['WinAttackPlayed', 'WinPlayedMatchday']
+considered_stats_defense = ['WinDefensePlayed', 'ReceivedDefensePlayed']
+considered_stats_attack = ['WinAttackPlayed', 'ScoredAttackPlayed']
+considered_stats_defense, considered_stats_attack = [], []
 considered_stats_teams = ['ELOAttackDefenseDifference',
                           'ELODefenseAttackDifference',
                           'ELODifference',
-                          'WinsLocal', 'WinsVisitant']
+                          'WeightedELODifference',
+                          'WinsDifference', 'CloseWinsDifference',
+                          'NeatGoalsAttackDifference', 'NeatGoalsDefenseDifference',
+                          'WinsMatchdayDifference',
+                          'ReceivedGoalsDefenseDefenseDifference', 'ReceivedGoalsAttackDefenseDifference']
+print("\nChosen parameters for defense:", considered_stats_defense)
+print("Chosen parameters for attack:", considered_stats_attack)
+print("Chosen parameters for teams:", considered_stats_teams)
+print()
 
 ## Creem el training set
 # Dataframe on hi desem tots els paràmetres d'avaluació de cada jugador
 columns = [stat_def+'1' for stat_def in considered_stats_defense] + [stat_att+'2' for stat_att in considered_stats_attack] +\
             [stat_def+'3' for stat_def in considered_stats_defense] + [stat_att+'4' for stat_att in considered_stats_attack] # noms de les columnes
-Stats_training = pd.DataFrame(columns = columns + considered_stats_teams)
-print(Stats_training.columns)
+feature_names = columns + considered_stats_teams
+Stats_training = pd.DataFrame(columns = feature_names)
+#print(Stats_training.columns)
 #Stats_training = pd.DataFrame(columns = ['ELODiffAttack'])
 
-#for nmatch in matches_df['Total_D']: # per cada partit disputat
+def calculate_differential_head2head(xarr, stat, match_dataframe, match_number, player_local = 'Jugador 1', player_visitant = 'Jugador 3'):
+    '''
+    El calcula la diferència d'un paràmetre entre dos jugadors que juguen a la mateixa posició però en equips contraris
+    :param xarr: xarray amb les estadístiques dels jugadors
+    :param stat: estatística que volem comparar
+    :param match_dataframe: dades del partit, on hi ha els noms dels jugadors
+    :param match_number: número del partit que volem analitzar
+    :return: diferència del paràmetre entre els dos jugadors
+    '''
+    values_local = xarr.sel(match=match_number, player=match_dataframe[player_local])[stat].values.item()
+    values_visitant = xarr.sel(match=match, player=match_dataframe[player_visitant])[stat].values.item()
+
+    differential = values_local - values_visitant
+    return differential
+
+
+def calculate_differential_opositeposition(xarr, stat_local, stat_visitant, match_dataframe, match_number, player_local='Jugador 1',
+                                     player_visitant='Jugador 3'):
+  '''
+  El calcula la diferència d'un paràmetre entre dos jugadors que juguen en posicions oposades (atacant vs defensor)
+  :param xarr: xarray amb les estadístiques dels jugadors
+  :param stat: estatística que volem comparar
+  :param match_dataframe: dades del partit, on hi ha els noms dels jugadors
+  :param match_number: número del partit que volem analitzar
+  :return: diferència del paràmetre entre els dos jugadors
+  '''
+  values_local = xarr.sel(match=match_number, player=match_dataframe[player_local])[stat_local].values.item()
+  values_visitant = xarr.sel(match=match, player=match_dataframe[player_visitant])[stat_visitant].values.item()
+
+  differential = values_local - values_visitant
+  return differential
+
+
 for match in range(1, matches_df.shape[0]): # per cada partit disputat
 #for match in range(int(0.2*matches_df.shape[0])+1, matches_df.shape[0]+1): # per cada partit disputat. Treiem els primers partits que no representen l'ELO real dels jugadors
     match_df = matches_df.iloc[match-1] # triem les dades d'aquest partit
@@ -91,49 +178,79 @@ for match in range(1, matches_df.shape[0]): # per cada partit disputat
     #matchday = match_df['Total_D']-1 # número de matchday
     # Llista on hi desarem els valors des les estadístiques de cada jugador que hi ha al camp, amb el mateix ordre que `columns`
     stats_match = []
-    for player in match_df[['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4']]:
-        if (player == match_df['Jugador 1']) or (player == match_df['Jugador 3']): # defensors
-            # Triem les estadístiques dels jugadors en aquest partit
-            player_stats = stats_xr.sel(match=match, player=player)[considered_stats_defense].to_array().values
-        elif (player == match_df['Jugador 2']) or (player == match_df['Jugador 4']): # atacants
-            # Triem les estadístiques dels jugadors en aquest partit
-            player_stats = stats_xr.sel(match=match, player=player)[considered_stats_attack].to_array().values
-        stats_match = stats_match + list(player_stats) # adjuntem les estadístiques del jugador a les dades d'aquest partit
+    #REMOVED INDIVIDUAL PERFORMANCE FACTORS
+    #for player in match_df[['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4']]:
+    #    if (player == match_df['Jugador 1']) or (player == match_df['Jugador 3']): # defensors
+    #        # Triem les estadístiques dels jugadors en aquest partit
+    #        player_stats = stats_xr.sel(match=match, player=player)[considered_stats_defense].to_array().values
+    #    elif (player == match_df['Jugador 2']) or (player == match_df['Jugador 4']): # atacants
+    #        # Triem les estadístiques dels jugadors en aquest partit
+    #        player_stats = stats_xr.sel(match=match, player=player)[considered_stats_attack].to_array().values
+    #    stats_match = stats_match + list(player_stats) # adjuntem les estadístiques del jugador a les dades d'aquest partit
 
-    # Afegim a la llista paràmetres del partit, creuant els dos equips
-    elo_attack_difference = (stats_xr.sel(match=match, player=match_df['Jugador 2'])['ELOAttack'].values.item() -
-                             stats_xr.sel(match=match, player=match_df['Jugador 4'])['ELOAttack'].values.item())
-    elo_defense_difference = (stats_xr.sel(match=match, player=match_df['Jugador 1'])['ELODefense'].values.item() -
-                             stats_xr.sel(match=match, player=match_df['Jugador 3'])['ELODefense'].values.item())
-    elo_difference = ( (stats_xr.sel(match=match, player=match_df['Jugador 1']))['ELODefense'].values.item() +
-                       (stats_xr.sel(match=match, player=match_df['Jugador 2']))['ELOAttack'].values.item() -
-                       ((stats_xr.sel(match=match, player=match_df['Jugador 3']))['ELODefense'].values.item() +
-                       (stats_xr.sel(match=match, player=match_df['Jugador 4']))['ELOAttack'].values.item() ))
-    elo_attackh_defensea_difference = (stats_xr.sel(match=match, player=match_df['Jugador 2'])['ELOAttack'].values.item() -
-                              stats_xr.sel(match=match, player=match_df['Jugador 3'])['ELODefense'].values.item()) # diferència ELO atacant-defensor rivals
-    elo_defenseh_attacka_difference = (stats_xr.sel(match=match, player=match_df['Jugador 1'])['ELODefense'].values.item() -
-                              stats_xr.sel(match=match, player=match_df['Jugador 4'])['ELOAttack'].values.item())
+    # --- Paràmetres individuals dels jugadors ---
+    # ELO
+    elo_attack_difference = calculate_differential_head2head(stats_xr, 'ELOAttack', match_df, match, player_local='Jugador 2', player_visitant='Jugador 4')
+    elo_defense_difference = calculate_differential_head2head(stats_xr, 'ELODefense', match_df, match, player_local='Jugador 1', player_visitant='Jugador 3')
+
+    elo_difference = elo_attack_difference + elo_defense_difference
+
+    weighted_elo_difference = ( (stats_xr.sel(match=match, player=match_df['Jugador 1']))['WeightedELO'].values.item() +
+                       (stats_xr.sel(match=match, player=match_df['Jugador 2']))['WeightedELO'].values.item() -
+                       ((stats_xr.sel(match=match, player=match_df['Jugador 3']))['WeightedELO'].values.item() +
+                       (stats_xr.sel(match=match, player=match_df['Jugador 4']))['WeightedELO'].values.item() ))
+
+    # Neat goals
+    neatgoals_attack_difference = calculate_differential_head2head(stats_xr, 'NeatGoalsAttackPlayed', match_df, match, player_local='Jugador 2', player_visitant='Jugador 4')
+    neatgoals_defense_difference = calculate_differential_head2head(stats_xr, 'NeatGoalsDefensePlayed', match_df, match, player_local='Jugador 1', player_visitant='Jugador 3')
+
+    # Nombre de partits guanyats en aquest dia
+    winsmatchday_difference = ((stats_xr.sel(match=match, player=match_df['Jugador 1']))['WinPlayedMatchday'].values.item() +
+                           (stats_xr.sel(match=match, player=match_df['Jugador 2']))['WinPlayedMatchday'].values.item() -
+                           ((stats_xr.sel(match=match, player=match_df['Jugador 3']))['WinPlayedMatchday'].values.item() +
+                            (stats_xr.sel(match=match, player=match_df['Jugador 4']))['WinPlayedMatchday'].values.item()))
+
+    # Diferència d'ELO entre l'atacant d'un equip i el defensor de l'altre
+    elo_attackh_defensea_difference = calculate_differential_opositeposition(stats_xr, 'ELOAttack', 'ELODefense', match_df, match, player_local='Jugador 2', player_visitant='Jugador 3')
+    elo_defenseh_attacka_difference = calculate_differential_opositeposition(stats_xr, 'ELODefense', 'ELOAttack', match_df, match, player_local='Jugador 1', player_visitant='Jugador 4')
+
+    # --- Paràmetres d'equip ---
+    # Victòries en partits ajustats
     close_wins_local = frequencies_xr.sel(teammate=match_df['Jugador 1'], player = match_df['Jugador 2'])['CloseWinsPlayed'].values.item()
     close_wins_visitant = frequencies_xr.sel(teammate=match_df['Jugador 3'], player = match_df['Jugador 4'])['CloseWinsPlayed'].values.item()
+    if np.isnan(close_wins_local): # Per CloseWinsPlayed, fem que el valor sigui 0.5 si l'original és NaN, que vol dir que no han jugat mai un Close Match junts
+      close_wins_local = 0.5
+    if np.isnan(close_wins_visitant):
+        close_wins_visitant = 0.5
+    close_wins_difference = close_wins_local - close_wins_visitant
+
+    # Gols rebuts d'un defensor contra l'altre defensor i contra l'atacant rival
+    # 'defender' rep els gols de 'defender_rival' o 'attacker_rival'
     receivedgoals_defense_defense_local = frequencies_xr.sel(defender = match_df['Jugador 1'], defender_rival = match_df['Jugador 3'])['ReceivedGoalsGamesDefenseDefense'].values.item()
     receivedgoals_defense_defense_visitant = frequencies_xr.sel(defender = match_df['Jugador 3'], defender_rival = match_df['Jugador 1'])['ReceivedGoalsGamesDefenseDefense'].values.item()
     receivedgoals_attack_defense_local = frequencies_xr.sel(defender = match_df['Jugador 1'], attacker_rival = match_df['Jugador 4'])['ReceivedGoalsGamesAttackDefense'].values.item()
     receivedgoals_attack_defense_visitant = frequencies_xr.sel(defender = match_df['Jugador 3'], attacker_rival = match_df['Jugador 2'])['ReceivedGoalsGamesAttackDefense'].values.item()
+    receivedgoals_defense_defense_difference = receivedgoals_defense_defense_local - receivedgoals_defense_defense_visitant
+    receivedgoals_attack_defense_difference = receivedgoals_attack_defense_local - receivedgoals_attack_defense_visitant
+
+    # Nombre de partits guanyats per cada equip
     team_wins_local = frequencies_xr.sel(teammate = match_df['Jugador 1'], player = match_df['Jugador 2'])['TeammatesWinsPlayed'].values.item()
     team_wins_visitant = frequencies_xr.sel(teammate = match_df['Jugador 3'], player = match_df['Jugador 4'])['TeammatesWinsPlayed'].values.item()
-#    stats_match = stats_match + [elo_attack_difference, elo_defense_difference, elo_attackh_defensea_difference, elo_defenseh_attacka_difference,
-#                                 close_wins_local, close_wins_visitant,
-#                                 receivedgoals_defense_defense_local, receivedgoals_defense_defense_visitant,
-#                                 receivedgoals_attack_defense_local, receivedgoals_attack_defense_visitant,
-#                                 team_wins_local, team_wins_visitant]
+    team_wins_difference = team_wins_local - team_wins_visitant
+
+    # --- Agrupació de dades ---
+    # Agrupem totes les dades del partit en una sola llista, que serà la fila de la matriu `X` corresponent a aquest partit. L'ordre dels paràmetres ha de ser el mateix que el de les columnes de `Stats_training`
     stats_match = stats_match + [elo_attackh_defensea_difference, elo_defenseh_attacka_difference,
-                                     elo_difference, team_wins_local, team_wins_visitant]
+                                     elo_difference, weighted_elo_difference, team_wins_difference, close_wins_difference,
+                                 neatgoals_attack_difference, neatgoals_defense_difference, winsmatchday_difference,
+                                 receivedgoals_defense_defense_difference, receivedgoals_attack_defense_difference]
 
     # Afegim el codi numèric de cada jugador
     #player_codes_match = [player_codes_dict[match_df['Jugador 1']], player_codes_dict[match_df['Jugador 2']],
     #                      player_codes_dict[match_df['Jugador 3']], player_codes_dict[match_df['Jugador 4']]]
     #stats_match = player_codes_match + stats_match
 
+    # --- Desament de les dades ---
     # Desem la llista d'estadístiques d'aquest partit
     Stats_training.loc[len(Stats_training)] = stats_match
 
@@ -141,108 +258,160 @@ Stats_training.to_csv('../generated_files/stats_training.csv', index=False) # de
 
 print('Saved stats training')
 
-# Ara ja tenim les dades `X` per entrenar el model. Abans d'entrenar-lo, estandaritzem els valors.
-# #Això és un pas comú en IA quan es tenen paràmetres amb diferents escales de valors.
-scaler = preprocessing.StandardScaler()
-Stats_training_stand = scaler.fit(Stats_training).transform(Stats_training.astype(float))
+###############################################################
+############## Preparació de les dades ########################
+###############################################################
+# Inspirat per https://github.com/NunonuN/ml-playground
 
-# Desem l'StandardScaler() per fer-lo servir en un altre programa
-joblib.dump(scaler, '../generated_files/scaler.pkl')
-
-# Separem tots els partits que tenim en una mostra d'entrenament (train) i una mostra de test.
-# Això ens permetrà avaluar el rendiment del nostre model. En aquest cas, de la mostra total un 10% serà de test i el 90% restant serà per entrenar el model.
+title = "RAW DATA SET"
+lenti = len(title)
+print("="*lenti)
+print(title)
+print("-"*lenti + '\n')
+print("Features")
+print("-"*8)
+print(f"Shape: {Stats_training.shape}\n")
+print(Stats_training.head())
+print(f"\nClass distribution:")
+print((Results_winning == 0).sum(), (Results_winning == 1).sum())
+print(f"\nTarget")
+print("-"*6)
+print(f"{Results_winning[:5] = }")
+print(f"{Results_winning[-5:] = }")
+print('='*80)
 
 # Retallem els datasets. Deixem fora els primers partits per aconseguir ELOs estables per cada jugador
-threshold = 0.2 # descartem el primer X% de partits per entrenar el model
-Scores_training = Scores_training[int(threshold*len(Scores_training)):]
-Results_winning_training = Results_winning_training[int(threshold*len(Results_winning_training)):]
-Stats_training_stand = Stats_training_stand[int(threshold*Stats_training_stand.shape[0]):, :]
+threshold = 0.3 # descartem el primer X% de partits per entrenar el model
+Results_winning = Results_winning[int(threshold*len(Results_winning)):]
+Stats_training = Stats_training[int(threshold*Stats_training.shape[0]):]
 
-X_train, X_test, y_winning_train, y_winning_test, y_score_train, y_score_test = (
-    train_test_split(Stats_training_stand, Results_winning_training, Scores_training, test_size=0.2))
+print("-"*6)
+print(f"\nCroppping first {threshold*100} % of points")
+print("-"*6)
 
-# Second split: from the training set, carve out a validation set
-X_train, X_val, y_winning_train, y_winning_val = train_test_split(
-    X_train, y_winning_train, test_size=0.1, random_state=42, stratify=y_winning_train
+###############################################################
+################### Anàlisi PCA ###############################
+###############################################################
+n_components = 5
+pca = PCA(n_components=n_components)
+principal_components = pca.fit_transform(Stats_training)
+explained_variance = pca.explained_variance_ratio_
+print("Explained variance by each component:", explained_variance)
+
+df_pca = pd.DataFrame(data=principal_components, columns=[f'PC{i+1}' for i in range(n_components)])
+df_pca['Local/Visitant'] = Results_winning
+
+# Plot PCA
+plt.scatter(df_pca['PC1'], df_pca['PC2'], c=df_pca['Local/Visitant'], cmap='coolwarm', alpha=0.7)
+plt.savefig('../results/ML/PCA_scatter_winning.png', dpi=300, bbox_inches='tight')
+
+####### New training dataset based on PCA components
+#X_class = df_pca[[f'PC{i+1}' for i in range(n_components)]].values
+#feature_names = [f'PC{i+1}' for i in range(n_components)]
+
+###############################################################
+################# Train / Test split ##########################
+###############################################################
+
+# split data into training and testing sets
+X_class_trn, X_class_tst, y_class_trn, y_class_tst = (
+  train_test_split(
+    Stats_training,
+    Results_winning,
+    test_size=0.15,
+    random_state=RND_STATE
+  )
 )
 
-# Passem els valors y de codi numèric (0, 1, 2...) a resultat real (3-0, 3-1, 3-2...)
-#y_score_train_labels = encoder_scores.inverse_transform(y_score_train)
-#y_score_test_labels = encoder_scores.inverse_transform(y_score_test)
+print(f"Training set size: {X_class_trn.shape[0]}")
+print(f"Testing set size: {X_class_tst.shape[0]}")
 
-#y_winning_train_labels = encoder_winning.inverse_transform(y_winning_train) # igual per l'equip guanyador (0,1 -> 'Local','Visitant')
-#y_winning_val_labels = encoder_scores.inverse_transform(y_winning_val)
-#y_winning_test_labels = encoder_winning.inverse_transform(y_winning_test)
+###############################################################
+############## Estandaritzem els valors #######################
+###############################################################
+# Cal estandaritzar després de fer l'split, per evitar que la informació del test set es filtrés al train set.
+# Per això, primer fem el split i després estandaritzem els valors.
+
+scaler_class = preprocessing.StandardScaler() # define scaler
+X_class_trn = scaler_class.fit_transform(X_class_trn) # fit scaler to training data and transform it
+X_class_tst = scaler_class.transform(X_class_tst) # transform test data using the same scaler fitted on training data
+
+# Desem l'StandardScaler() per fer-lo servir en un altre programa
+joblib.dump(scaler_class, '../generated_files/scaler.pkl')
+
+###############################################################
+############## Entrenament del model ##########################
+###############################################################
 
 # ## Definició i entrenament del model
-# 2) compute scale_pos_weight for binary imbalance (if binary)
-if len(np.unique(Results_winning_training)) == 2:
-    negatives = (Results_winning_training == 0).sum()
-    positives = (Results_winning_training == 1).sum()
-    scale_pos_weight = negatives / max(1, positives)
-else:
-    scale_pos_weight = 1.0
+print("Searching for best hyperparameters...")
+## Grid search for hyperparameter tuning (uncomment to run)
+parameters = {'n_estimators': [200, 250], 'max_depth':[1,2],
+              'learning_rate': [0.01, 0.02], 'subsample': [0.6, 0.7],
+              'colsample_bytree': [0.8, 0.9],
+              'reg_lambda': [2.5, 3., 3.5]}
+xgb = xgb.XGBClassifier()
+clf = GridSearchCV(xgb, parameters, cv=5)
+clf.fit(X_class_trn, y_class_trn)
+print("Best parameters found: ", clf.best_params_)
+xgb_class = clf.best_estimator_
+y_pred_xgb = xgb_class.predict(X_class_tst)
+y_pred_xgb_prob = xgb_class.predict_proba(X_class_tst)[:, 1]
 
-# 3) pipeline + XGB classifier
-y = Results_winning_training
-pipeline = Pipeline([
-    ("scaler", StandardScaler()),
-    ("clf", xgb.XGBClassifier(
-        use_label_encoder=False,
-        eval_metric="logloss",
-        objective="binary:logistic" if len(np.unique(y)) == 2 else "multi:softprob",
-        num_class=None if len(np.unique(y)) == 2 else len(np.unique(y)),
-        verbosity=0,
-        n_jobs=-1,
-        scale_pos_weight=scale_pos_weight
-    ))
-])
+###############################################################
+################# Informe del model ###########################
+###############################################################
 
-# 4) hyperparameter distributions
-param_dist = {
-    "clf__n_estimators": [100, 300, 600, 1000],
-    "clf__max_depth": [3, 5, 7, 9],
-    "clf__learning_rate": [0.01, 0.03, 0.05, 0.1],
-    "clf__subsample": [0.6, 0.8, 1.0],
-    "clf__colsample_bytree": [0.6, 0.8, 1.0],
-    "clf__reg_alpha": [0, 0.5, 1, 5],
-    "clf__reg_lambda": [1, 3, 5, 10]
-}
+title = "Game winning Classification – XGBoost"
+lenti = len(title)
+print(title)
+print("-"*lenti)
+print(f"Accuracy: {accuracy_score(y_class_tst, y_pred_xgb):.4f}")
+print(f"F1-Score: {f1_score(y_class_tst, y_pred_xgb):.4f}")
 
-# 5) Randomized search with stratified CV
-cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-search = RandomizedSearchCV(
-    pipeline, param_dist, n_iter=40, scoring="accuracy", cv=cv,
-    n_jobs=-1, random_state=42, verbose=1
-)
-search.fit(X_train, y_winning_train)
+###############################################################
+################### Matriu de confusió ########################
+###############################################################
 
-# 6) Evaluate on test set
-best = search.best_estimator_
-y_pred = best.predict(X_test)
-print("Best params:", search.best_params_)
-print(classification_report(y_winning_test, y_pred))
-ConfusionMatrixDisplay.from_predictions(y_winning_test, y_pred)
-plt.savefig('../results/Confusion_Matrix_Test_winning.png', dpi=300, bbox_inches='tight')
+y_pred = xgb_class.predict(X_class_tst)
+print("Best params:", clf.best_params_)
+print(classification_report(y_class_tst, y_pred_xgb))
+cm_disp = ConfusionMatrixDisplay.from_predictions(y_class_tst, y_pred)
+plt.savefig('../results/ML/Confusion_Matrix_Test_winning.png', dpi=300, bbox_inches='tight')
 plt.clf()
 
-# 7) Save model and scaler
-joblib.dump(best, '../generated_files/xgb_winning_best_pipeline.joblib')
+###############################################################
+#################### SHAP summary #############################
+###############################################################
 
-# 8) SHAP summary (explain top features)
-feature_names = Stats_training.columns.tolist()
-X_shap = pd.DataFrame(best.named_steps["scaler"].transform(X_train), columns=feature_names)
-explainer = shap.Explainer(best.named_steps["clf"], X_shap)
-shap_exp = explainer(X_shap)  # Explanation object
+try:
+    #X_shap = pd.DataFrame(scaler_class.transform(X_class_tst), columns=feature_names)
+    X_shap = pd.DataFrame(X_class_tst, columns=feature_names)
+except ValueError: # estem fent servir PCA
+    X_shap = X_class_tst
+explainer = shap.TreeExplainer(xgb_class)
+shap_values = explainer(X_shap)
 
 # Plot and save (feature names will appear because X_shap is a DataFrame)
-shap.summary_plot(shap_exp.values, X_shap, show=False)
-plt.savefig('../results/shap_summary_winning.png', dpi=300, bbox_inches='tight')
+shap.summary_plot(shap_values, X_shap, show=False)
+plt.savefig('../results/ML/shap_summary_winning.png', dpi=300, bbox_inches='tight')
 plt.clf()
 
-#pred_labels = probs.argmax(axis=0)
-#print(probs, pred_labels)
-#results = encoder_scores.inverse_transform(pred_labels)
+###############################################################
+#################### ROC-AUC curve #############################
+###############################################################
+fig, ax = plt.subplots(figsize=(7,6))
+rocc_disp = RocCurveDisplay.from_estimator(estimator=xgb_class, X=X_class_tst, y=y_class_tst, ax=ax,
+                               name='XGBoost', curve_kwargs={'color': 'darkorange', 'linewidth': 2})
+ax.plot([0, 1], [0, 1], 'k--', label='Random Classifier')
+ax.set_xlabel("False Positive Rate (1 — Specificity)", fontsize=11)
+ax.set_ylabel("True Positive Rate (Sensitivity, Recall)", fontsize=11)
+ax.grid(True, linestyle=":", alpha=0.6)
+ax.legend(loc="lower right", frameon=True)
+plt.savefig('../results/ML/ROC_AUC_winning.png', dpi=300, bbox_inches='tight')
+plt.clf()
+
+
 
 # Prediccions dels marcadors
 # Conjunt de paràmetres que avaluen el model
