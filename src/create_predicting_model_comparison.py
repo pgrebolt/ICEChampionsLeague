@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from sklearn import preprocessing
+from sklearn.model_selection import GridSearchCV
 import joblib
 from sklearn.datasets import (
   make_classification,
@@ -390,22 +391,34 @@ print(f"Accuracy: {accuracy_score(y_class_tst, y_pred_rf):.4f}")
 print(f"F1-Score: {f1_score(y_class_tst, y_pred_rf):.4f}")
 
 ## XGBoost Classifier
-xgb_class = xgb.XGBClassifier(
-  n_estimators=150,
-  max_depth=4,            # shallow trees (boosting builds depth via ensembles)
-  learning_rate=0.05,     # slow, steady learning
-  subsample=0.8,          # 90% of data per tree
-  colsample_bytree=0.7,   # 70% of features per tree
-  reg_lambda=1.0,         # moderate regularisation
-  random_state=RND_STATE,
-  n_jobs=-1,
-  verbosity=0
-)
-xgb_class.fit(
-  X_class_trn, y_class_trn,
-  eval_set=[(X_class_tst, y_class_tst)],
-  verbose=False
-)
+#xgb_class = xgb.XGBClassifier(
+#  n_estimators=150,
+#  max_depth=4,            # shallow trees (boosting builds depth via ensembles)
+#  learning_rate=0.05,     # slow, steady learning
+#  subsample=0.8,          # 90% of data per tree
+#  colsample_bytree=0.7,   # 70% of features per tree
+#  reg_lambda=1.0,         # moderate regularisation
+#  random_state=RND_STATE,
+#  n_jobs=-1,
+#  verbosity=0
+#)
+#xgb_class.fit(
+#  X_class_trn, y_class_trn,
+#  eval_set=[(X_class_tst, y_class_tst)],
+#  verbose=False
+#)
+#y_pred_xgb = xgb_class.predict(X_class_tst)
+#y_pred_xgb_prob = xgb_class.predict_proba(X_class_tst)[:, 1]
+## Grid search for hyperparameter tuning (uncomment to run)
+parameters = {'n_estimators': [50, 100, 150], 'max_depth':[1,2,3],
+              'learning_rate': [0.005, 0.01, 0.05], 'subsample': [0.5, 0.6, 0.7],
+              'colsample_bytree': [0.6, 0.7, 0.8, 0.9],
+              'reg_lambda': [1.5, 2., 2.5]}
+xgb = xgb.XGBClassifier()
+clf = GridSearchCV(xgb, parameters, cv=5)
+clf.fit(X_class_trn, y_class_trn)
+print("Best parameters found: ", clf.best_params_)
+xgb_class = clf.best_estimator_
 y_pred_xgb = xgb_class.predict(X_class_tst)
 y_pred_xgb_prob = xgb_class.predict_proba(X_class_tst)[:, 1]
 
@@ -660,16 +673,16 @@ models_class_cv = {
     random_state=RND_STATE,
     n_jobs=-1,
   ),
-  'XGBoost': xgb.XGBClassifier(
-    n_estimators=150,
-    max_depth=4,
-    learning_rate=0.05,
-    subsample=0.8,
-    colsample_bytree=0.7,
-    reg_lambda=1.0,
-    random_state=RND_STATE,
-    verbosity=0,
-  ),
+  'XGBoost': xgb_class#xgb.XGBClassifier(
+#    n_estimators=150,
+#    max_depth=4,
+#    learning_rate=0.05,
+#    subsample=0.8,
+#    colsample_bytree=0.7,
+#    reg_lambda=1.0,
+#    random_state=RND_STATE,
+#    verbosity=0,
+#  ),
 }
 
 title = "5-fold CV (F1-score, classification)".upper()
