@@ -317,3 +317,13 @@ D,Jugador 1,Jugador 2,Jugador 3,Jugador 4,Gols 1,Gols 2,Gols 3,Gols 4,Local,Visi
 40,Maider,Antía,Pau,Elena,0,2,3,0,2,3,Visitant
 40,Maider,Dani,Pau,Elena,2,1,1,0,3,1,Local
 40,Maider,Dani,Pau,Elena,1,2,0,0,3,0,Local
+41,Maider,Dani,Pau,Elena,1,2,0,0,3,0,Local
+41,Maider,Dani,Elena,Pau,1,2,1,0,3,1,Local
+41,Maider,Dani,Jose,Elena,2,1,0,0,3,0,Local
+41,Maider,Dani,Jose,Pau,1,1,1,2,2,3,Visitant
+41,Maider,Elena,Jose,Pau,1,0,1,2,1,3,Visitant
+41,Dani,Elena,Jose,Pau,2,0,2,1,2,3,Visitant
+41,Maider,Dani,Jose,Pau,2,1,2,0,3,2,Local
+41,Maider,Dani,Luis,Elena,0,3,0,0,3,0,Local
+41,Maider,Luis,Dani,Elena,1,2,0,2,3,2,Local
+41,Maider,Luis,Dani,Elena,2,1,0,1,3,1,Local
