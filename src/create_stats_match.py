@@ -157,6 +157,16 @@ def update_elo(results_df, parameters):
     R_away_attacker_new = R_away_attacker + K * (S_away - P_away) * r_attacker_away / r_away
     #print(R_away_defender, S_away, P_away, r_defender_away, r_attacker_away, r_away, R_away_defender_new, R_away_attacker_new)
 
+    # Si un dels jugadors és "Convidat", fixem el seu ELO a 1000 (no es veu afectat per cap resultat)
+    if home_attacker_1 == "Convidat":
+        R_home_attacker_new = initial_ELO
+    if home_defender_1 == "Convidat":
+        R_home_defender_new = initial_ELO
+    if away_attacker_1 == "Convidat":
+        R_away_attacker_new = initial_ELO
+    if away_defender_1 == "Convidat":
+        R_away_defender_new = initial_ELO
+
     ## Retornem els nous ELOs
     if first_game:
         # Llista amb els ELO després del primer partit
