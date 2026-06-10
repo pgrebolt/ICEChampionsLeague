@@ -3,7 +3,6 @@
 
 
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
 import pandas as pd
 import xarray as xr
@@ -45,7 +44,6 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # set visualisation style
-sns.set_style('whitegrid')
 plt.rcParams['figure.figsize'] = (12, 6)
 
 # set random seed for reproducibility
@@ -376,7 +374,7 @@ print(f"F1-Score: {f1_score(y_class_tst, y_pred_xgb):.4f}")
 y_pred = xgb_class.predict(X_class_tst)
 print("Best params:", clf.best_params_)
 print(classification_report(y_class_tst, y_pred_xgb))
-cm_disp = ConfusionMatrixDisplay.from_predictions(y_class_tst, y_pred)
+cm_disp = ConfusionMatrixDisplay.from_predictions(y_class_tst, y_pred, display_labels=['Loss', 'Win'])
 plt.savefig('../results/ML/Confusion_Matrix_Test_winning.png', dpi=300, bbox_inches='tight')
 plt.clf()
 
