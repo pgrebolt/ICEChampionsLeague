@@ -1,2 +1,10 @@
 .idea/
 .ipynb_checkpoints/
+
+*.log
+*.aux
+*synctex.gz
+*.nav
+*.out
+*.snm
+*.vrb
