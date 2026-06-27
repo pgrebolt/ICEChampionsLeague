@@ -7,6 +7,10 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from sklearn import preprocessing
+import pymc as pm
+import arviz as az
+import scipy.stats as stats
+import itertools
 from sklearn.decomposition import PCA
 
 from sklearn.metrics import (
@@ -88,15 +92,13 @@ Scores = np.array(Scores[1:]) # hem tret el primer partit perquè es faran servi
 encoder_scores = preprocessing.LabelEncoder()
 Scores_training = encoder_scores.fit_transform(Scores.astype(str))
 
-# Desem l'StandardScaler() per fer-lo servir en un altre programa
-joblib.dump(encoder_scores, '../generated_files/encoder_scores.pkl')
-
 # Codifiquem el nom de cada jugador
 encoder_names = preprocessing.LabelEncoder()
 players_names = np.unique(matches_df[['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4']].values.flatten())
 player_codes = encoder_names.fit_transform(players_names)
 player_codes_dict = {players_names[i]: player_codes[i] for i in range(len(players_names))}
 
+print(player_codes_dict)
 # Seguidament construïm la matriu `X` que conté les dades dels jugadors al camp. Primer definim quins paràmetres tenim en compte pels atacants i pels defensors. Després, construïm la matriu on, fila per fila, hi ha tots els paràmetres dels jugadors.
 
 # Paràmetres que considerem al model, en funció de si el jugador és atacant o defensor
@@ -122,262 +124,264 @@ print("Chosen parameters for attack:", considered_stats_attack)
 print("Chosen parameters for teams:", considered_stats_teams)
 print()
 
-## Creem el training set
-# Dataframe on hi desem tots els paràmetres d'avaluació de cada jugador
-columns = [stat_def+'1' for stat_def in considered_stats_defense] + [stat_att+'2' for stat_att in considered_stats_attack] +\
-            [stat_def+'3' for stat_def in considered_stats_defense] + [stat_att+'4' for stat_att in considered_stats_attack] # noms de les columnes
-feature_names = columns + considered_stats_teams
-Stats_training = pd.DataFrame(columns = feature_names)
-#print(Stats_training.columns)
-#Stats_training = pd.DataFrame(columns = ['ELODiffAttack'])
+# Calculem la diferència de gols entre local i visitant, que serà la variable objectiu per predir el resultat del partit
+goal_diff = matches_df['Local'] - matches_df['Visitant']
+#Stats_training['Goal_Diff'] = goal_diff[1:].values # hem tret el primer partit perquè es faran servir les estadístiques del partit anterior per predir cada resultat, i per al primer partit no hi ha dades prèvies
 
-def calculate_differential_head2head(xarr, stat, match_dataframe, match_number, player_local = 'Jugador 1', player_visitant = 'Jugador 3'):
-    '''
-    El calcula la diferència d'un paràmetre entre dos jugadors que juguen a la mateixa posició però en equips contraris
-    :param xarr: xarray amb les estadístiques dels jugadors
-    :param stat: estatística que volem comparar
-    :param match_dataframe: dades del partit, on hi ha els noms dels jugadors
-    :param match_number: número del partit que volem analitzar
-    :return: diferència del paràmetre entre els dos jugadors
-    '''
-    values_local = xarr.sel(match=match_number, player=match_dataframe[player_local])[stat].values.item()
-    values_visitant = xarr.sel(match=match, player=match_dataframe[player_visitant])[stat].values.item()
+######## Gràfiques prèvies ############
+## Pintem la comparativa entre ELO difference i goal difference, per veure si hi ha correlació
+#plt.scatter(Stats_training['ELODifference'], Stats_training['Goal_Diff'], alpha=0.5)
+#plt.xlabel("ELO difference")
+#plt.ylabel("Goal difference")
+#plt.show()
 
-    differential = values_local - values_visitant
-    return differential
-
-
-def calculate_differential_opositeposition(xarr, stat_local, stat_visitant, match_dataframe, match_number, player_local='Jugador 1',
-                                     player_visitant='Jugador 3'):
-  '''
-  El calcula la diferència d'un paràmetre entre dos jugadors que juguen en posicions oposades (atacant vs defensor)
-  :param xarr: xarray amb les estadístiques dels jugadors
-  :param stat: estatística que volem comparar
-  :param match_dataframe: dades del partit, on hi ha els noms dels jugadors
-  :param match_number: número del partit que volem analitzar
-  :return: diferència del paràmetre entre els dos jugadors
-  '''
-  values_local = xarr.sel(match=match_number, player=match_dataframe[player_local])[stat_local].values.item()
-  values_visitant = xarr.sel(match=match, player=match_dataframe[player_visitant])[stat_visitant].values.item()
-
-  differential = values_local - values_visitant
-  return differential
-
-
-for match in range(1, matches_df.shape[0]): # per cada partit disputat
-#for match in range(int(0.2*matches_df.shape[0])+1, matches_df.shape[0]+1): # per cada partit disputat. Treiem els primers partits que no representen l'ELO real dels jugadors
-    match_df = matches_df.iloc[match-1] # triem les dades d'aquest partit
-
-    #matchday = match_df['Total_D']-1 # número de matchday
-    # Llista on hi desarem els valors des les estadístiques de cada jugador que hi ha al camp, amb el mateix ordre que `columns`
-    stats_match = []
-    #REMOVED INDIVIDUAL PERFORMANCE FACTORS
-    #for player in match_df[['Jugador 1', 'Jugador 2', 'Jugador 3', 'Jugador 4']]:
-    #    if (player == match_df['Jugador 1']) or (player == match_df['Jugador 3']): # defensors
-    #        # Triem les estadístiques dels jugadors en aquest partit
-    #        player_stats = stats_xr.sel(match=match, player=player)[considered_stats_defense].to_array().values
-    #    elif (player == match_df['Jugador 2']) or (player == match_df['Jugador 4']): # atacants
-    #        # Triem les estadístiques dels jugadors en aquest partit
-    #        player_stats = stats_xr.sel(match=match, player=player)[considered_stats_attack].to_array().values
-    #    stats_match = stats_match + list(player_stats) # adjuntem les estadístiques del jugador a les dades d'aquest partit
-
-    # --- Paràmetres individuals dels jugadors ---
-    # ELO
-    elo_attack_difference = calculate_differential_head2head(stats_xr, 'ELOAttack', match_df, match, player_local='Jugador 2', player_visitant='Jugador 4')
-    elo_defense_difference = calculate_differential_head2head(stats_xr, 'ELODefense', match_df, match, player_local='Jugador 1', player_visitant='Jugador 3')
-
-    elo_difference = elo_attack_difference + elo_defense_difference
-
-    weighted_elo_difference = ( (stats_xr.sel(match=match, player=match_df['Jugador 1']))['WeightedELO'].values.item() +
-                       (stats_xr.sel(match=match, player=match_df['Jugador 2']))['WeightedELO'].values.item() -
-                       ((stats_xr.sel(match=match, player=match_df['Jugador 3']))['WeightedELO'].values.item() +
-                       (stats_xr.sel(match=match, player=match_df['Jugador 4']))['WeightedELO'].values.item() ))
-
-    # Neat goals
-    neatgoals_attack_difference = calculate_differential_head2head(stats_xr, 'NeatGoalsAttackPlayed', match_df, match, player_local='Jugador 2', player_visitant='Jugador 4')
-    neatgoals_defense_difference = calculate_differential_head2head(stats_xr, 'NeatGoalsDefensePlayed', match_df, match, player_local='Jugador 1', player_visitant='Jugador 3')
-
-    # Nombre de partits guanyats en aquest dia
-    winsmatchday_difference = ((stats_xr.sel(match=match, player=match_df['Jugador 1']))['WinPlayedMatchday'].values.item() +
-                           (stats_xr.sel(match=match, player=match_df['Jugador 2']))['WinPlayedMatchday'].values.item() -
-                           ((stats_xr.sel(match=match, player=match_df['Jugador 3']))['WinPlayedMatchday'].values.item() +
-                            (stats_xr.sel(match=match, player=match_df['Jugador 4']))['WinPlayedMatchday'].values.item()))
-
-    # Diferència d'ELO entre l'atacant d'un equip i el defensor de l'altre
-    elo_attackh_defensea_difference = calculate_differential_opositeposition(stats_xr, 'ELOAttack', 'ELODefense', match_df, match, player_local='Jugador 2', player_visitant='Jugador 3')
-    elo_defenseh_attacka_difference = calculate_differential_opositeposition(stats_xr, 'ELODefense', 'ELOAttack', match_df, match, player_local='Jugador 1', player_visitant='Jugador 4')
-
-    # --- Paràmetres d'equip ---
-    # Victòries en partits ajustats
-    close_wins_local = frequencies_xr.sel(teammate=match_df['Jugador 1'], player = match_df['Jugador 2'])['CloseWinsPlayed'].values.item()
-    close_wins_visitant = frequencies_xr.sel(teammate=match_df['Jugador 3'], player = match_df['Jugador 4'])['CloseWinsPlayed'].values.item()
-    if np.isnan(close_wins_local): # Per CloseWinsPlayed, fem que el valor sigui 0.5 si l'original és NaN, que vol dir que no han jugat mai un Close Match junts
-      close_wins_local = 0.5
-    if np.isnan(close_wins_visitant):
-        close_wins_visitant = 0.5
-    close_wins_difference = close_wins_local - close_wins_visitant
-
-    # Gols rebuts d'un defensor contra l'altre defensor i contra l'atacant rival
-    # 'defender' rep els gols de 'defender_rival' o 'attacker_rival'
-    receivedgoals_defense_defense_local = frequencies_xr.sel(defender = match_df['Jugador 1'], defender_rival = match_df['Jugador 3'])['ReceivedGoalsGamesDefenseDefense'].values.item()
-    receivedgoals_defense_defense_visitant = frequencies_xr.sel(defender = match_df['Jugador 3'], defender_rival = match_df['Jugador 1'])['ReceivedGoalsGamesDefenseDefense'].values.item()
-    receivedgoals_attack_defense_local = frequencies_xr.sel(defender = match_df['Jugador 1'], attacker_rival = match_df['Jugador 4'])['ReceivedGoalsGamesAttackDefense'].values.item()
-    receivedgoals_attack_defense_visitant = frequencies_xr.sel(defender = match_df['Jugador 3'], attacker_rival = match_df['Jugador 2'])['ReceivedGoalsGamesAttackDefense'].values.item()
-    receivedgoals_defense_defense_difference = receivedgoals_defense_defense_local - receivedgoals_defense_defense_visitant
-    receivedgoals_attack_defense_difference = receivedgoals_attack_defense_local - receivedgoals_attack_defense_visitant
-
-    # Nombre de partits guanyats per cada equip
-    team_wins_local = frequencies_xr.sel(teammate = match_df['Jugador 1'], player = match_df['Jugador 2'])['TeammatesWinsPlayed'].values.item()
-    team_wins_visitant = frequencies_xr.sel(teammate = match_df['Jugador 3'], player = match_df['Jugador 4'])['TeammatesWinsPlayed'].values.item()
-    team_wins_difference = team_wins_local - team_wins_visitant
-
-    # --- Agrupació de dades ---
-    # Agrupem totes les dades del partit en una sola llista, que serà la fila de la matriu `X` corresponent a aquest partit. L'ordre dels paràmetres ha de ser el mateix que el de les columnes de `Stats_training`
-    stats_match = stats_match + [elo_attackh_defensea_difference, elo_defenseh_attacka_difference,
-                                     elo_difference, weighted_elo_difference, team_wins_difference, close_wins_difference,
-                                 neatgoals_attack_difference, neatgoals_defense_difference, winsmatchday_difference,
-                                 receivedgoals_defense_defense_difference, receivedgoals_attack_defense_difference]
-
-    # Afegim el codi numèric de cada jugador
-    #player_codes_match = [player_codes_dict[match_df['Jugador 1']], player_codes_dict[match_df['Jugador 2']],
-    #                      player_codes_dict[match_df['Jugador 3']], player_codes_dict[match_df['Jugador 4']]]
-    #stats_match = player_codes_match + stats_match
-
-    # --- Desament de les dades ---
-    # Desem la llista d'estadístiques d'aquest partit
-    Stats_training.loc[len(Stats_training)] = stats_match
-
-Stats_training.to_csv('../generated_files/stats_training.csv', index=False) # desem per poder obrir més tard
-
-print('Saved stats training')
+##### Triem les dades
+last_elo_attack = stats_xr['ELOAttack'].isel(match=-1).values
+last_elo_defense = stats_xr['ELODefense'].isel(match=-1).values
+goal_diff = matches_df['Local'] - matches_df['Visitant']
 
 ###############################################################
-############## Preparació de les dades ########################
-###############################################################
-# Inspirat per https://github.com/NunonuN/ml-playground
-
-title = "RAW DATA SET"
-lenti = len(title)
-print("="*lenti)
-print(title)
-print("-"*lenti + '\n')
-print("Features")
-print("-"*8)
-print(f"Shape: {Stats_training.shape}\n")
-print(Stats_training.head())
-print(f"\nClass distribution:")
-print((Results_winning == 0).sum(), (Results_winning == 1).sum())
-print(f"\nTarget")
-print("-"*6)
-print(f"{Results_winning[:5] = }")
-print(f"{Results_winning[-5:] = }")
-print('='*80)
-
-# Retallem els datasets. Deixem fora els primers partits per aconseguir ELOs estables per cada jugador
-threshold = 0.3 # descartem el primer X% de partits per entrenar el model
-Results_winning = Results_winning[int(threshold*len(Results_winning)):]
-Stats_training = Stats_training[int(threshold*Stats_training.shape[0]):]
-
-print("-"*6)
-print(f"\nCroppping first {threshold*100} % of points")
-print("-"*6)
-
-###############################################################
-################### Anàlisi PCA ###############################
-###############################################################
-n_components = 5
-pca = PCA(n_components=n_components)
-principal_components = pca.fit_transform(Stats_training)
-explained_variance = pca.explained_variance_ratio_
-print("Explained variance by each component:", explained_variance)
-
-df_pca = pd.DataFrame(data=principal_components, columns=[f'PC{i+1}' for i in range(n_components)])
-df_pca['Local/Visitant'] = Results_winning
-
-# Plot PCA
-plt.scatter(df_pca['PC1'], df_pca['PC2'], c=df_pca['Local/Visitant'], cmap='coolwarm', alpha=0.7)
-plt.savefig('../results/ML/PCA_scatter_winning.png', dpi=300, bbox_inches='tight')
-
-####### New training dataset based on PCA components
-#X_class = df_pca[[f'PC{i+1}' for i in range(n_components)]].values
-#feature_names = [f'PC{i+1}' for i in range(n_components)]
-
-###############################################################
-################# Train / Test split ##########################
-###############################################################
-
-# split data into training and testing sets
-X_class_trn, X_class_tst, y_class_trn, y_class_tst = (
-  train_test_split(
-    Stats_training,
-    Results_winning,
-    test_size=0.15,
-    random_state=RND_STATE
-  )
-)
-
-print(f"Training set size: {X_class_trn.shape[0]}")
-print(f"Testing set size: {X_class_tst.shape[0]}")
-
-###############################################################
-############## Estandaritzem els valors #######################
+########## Estandaritzem els valors d'ELO #####################
 ###############################################################
 # Cal estandaritzar després de fer l'split, per evitar que la informació del test set es filtrés al train set.
 # Per això, primer fem el split i després estandaritzem els valors.
 
-scaler_class = preprocessing.StandardScaler() # define scaler
-X_class_trn = scaler_class.fit_transform(X_class_trn) # fit scaler to training data and transform it
-X_class_tst = scaler_class.transform(X_class_tst) # transform test data using the same scaler fitted on training data
+scaler_attack = preprocessing.StandardScaler() # define scaler
+last_elo_attack_std = scaler_attack.fit_transform(last_elo_attack.reshape(-1,1)) # fit scaler to training data and transform it
+scaler_defense = preprocessing.StandardScaler() # define scaler
+last_elo_defense_std = scaler_defense.fit_transform(last_elo_defense.reshape(-1,1)) # fit scaler to training data and transform it
 
-# Desem l'StandardScaler() per fer-lo servir en un altre programa
-joblib.dump(scaler_class, '../generated_files/scaler.pkl')
+last_elo_attack_std = last_elo_attack_std.reshape(-1) # reshape to 1D array
+last_elo_defense_std = last_elo_defense_std.reshape(-1) # reshape to 1D array
+print(last_elo_attack_std)
+################################################################
+n_players = len(players_names)
+n_matches = len(goal_diff)
 
+# Índexs dels jugadors que juguen a cada partit (per a cada rol: atacant i defensor, local i visitant)
+atk_local = [player_codes_dict[matches_df['Jugador 1'].iloc[i]] for i in range(n_matches)]
+def_local = [player_codes_dict[matches_df['Jugador 2'].iloc[i]] for i in range(n_matches)]
+atk_visit = [player_codes_dict[matches_df['Jugador 3'].iloc[i]] for i in range(n_matches)]
+def_visit = [player_codes_dict[matches_df['Jugador 4'].iloc[i]] for i in range(n_matches)]
+
+mean_goals_game = np.mean(matches_df['Local'] + matches_df['Visitant'])
+std_goals_game = np.std(matches_df['Local'] + matches_df['Visitant'])
+log_mean_goals_game = np.log(mean_goals_game)
+log_std_goals_game = np.log(std_goals_game)
+print("Goals per game: ", mean_goals_game, "+-", std_goals_game)
 ###############################################################
-############## Entrenament del model ##########################
+################### Model bayesià #############################
 ###############################################################
-
 # Definició del model probabilístic
-with pm.Model() as foosball_model:
-    # 1. PRIORS: Definim que l'habilitat de cada jugador segueix una Normal(0, 1)
-    # Creem un vector de 10 valors per a Atac i 10 valors per a Defensa
-    skill_attack = pm.Normal("skill_attack", mu=0, sigma=1, shape=n_players)
-    skill_defense = pm.Normal("skill_defense", mu=0, sigma=1, shape=n_players)
+with pm.Model() as foosball_poisson_model:
 
-    # Error aleatori del joc (la variància inherent al futbolí)
-    sigma_match = pm.Exponential("sigma_match", lam=1)
+    # 1. Priors d'habilitat. Una distribució normal per a cada jugador, amb mitjana i desviació estàndard basades en l'ELO estandarditzat.
+    skill_attack = pm.Normal("skill_attack", mu=last_elo_attack_std, sigma=0.1, shape=n_players)
+    skill_defense = pm.Normal("skill_defense", mu=last_elo_defense_std, sigma=0.1, shape=n_players)
 
-    # 2. LÒGICA DEL JOC: Calculem la potència esperada de cada equip en cada partit
-    # Ajuntem el talent de l'atacant local amb el defensor local, i el mateix per als visitants
-    expected_local = skill_attack[atk_local] + skill_defense[def_local]
-    expected_visit = skill_attack[atk_visit] + skill_defense[def_visit]
+    # Intercept (La mitjana base de gols que es fan en un partit normal de futbolí)
+    baseline_scoring = pm.Normal("baseline_scoring", mu=0, sigma=1)
 
-    # La diferència de gols teòrica (sense mu_local, el joc és 100% simètric)
-    mu_diff = expected_local - expected_visit
+    # 2. LÒGICA DE LES TAXES DE GOL (λ - Lambda)
+    # L'esperança de gols es calcula com a exponencial (funció link logarítmica de Poisson)
+    # Gols esperats del Local: El seu atac VS la teva defensa
+    lambda_local = pm.math.exp(baseline_scoring + skill_attack[atk_local] - skill_defense[def_visit])
+    # Gols esperats del Visitant: El seu atac VS la teva defensa
+    lambda_visitant = pm.math.exp(baseline_scoring + skill_attack[atk_visit] - skill_defense[def_local])
 
-    # 3. LIKELIHOOD: Connectem la teoria amb les teves dades reals de partits
-    observed_diff = pm.Normal("observed_diff", mu=mu_diff, sigma=sigma_match, observed=goal_diffs)
+    # 3. LIKELIHOOD (Dues distribucions de Poisson independents)
+    # Connectem les lambdes teòriques amb els teus gols de veritat de la base de dades
+    obs_local = pm.Poisson("obs_local", mu=lambda_local, observed=matches_df['Local'])
+    obs_visitant = pm.Poisson("obs_visitant", mu=lambda_visitant, observed=matches_df['Visitant'])
 
-    # 4. MOSTREIG: L'ordinador comença a fer milers de simulacions (MCMC)
-    print("Iniciant el mostreig bayesià...")
+    # Executem el mostreig MCMC
     trace = pm.sample(draws=1000, tune=1000, return_inferencedata=True, random_seed=42)
 
-# Extreiem la mitjana de les habilitats calculades pel model
-summary = az.summary(trace, var_names=["skill_attack", "skill_defense"])
+# Imprimim el sumari
+summary = az.summary(trace, var_names=["skill_attack", "skill_defense", "baseline_scoring"], round_to=2)
+print(summary)
 
-# Imaginem un nou partit:
-# Local: Atacant 0, Defensor 1  |  Visitant: Atacant 2, Defensor 3
-atk_l_nou, def_l_nou = 0, 1
-atk_v_nou, def_v_nou = 2, 3
+###########################################################
+############ Simulació d'un nou partit ####################
+###########################################################
+# Jugadors que juguen al nou partit
+j1, j2, j3, j4 = 'Gisela', 'Rebeca', 'Víctor', 'Pau' #exemple
 
-# Recuperem les mitjanas de les posteriors (les nostres noves puntuacions d'habilitat)
-mean_atk = summary["mean"].loc["skill_attack"].values
-mean_def = summary["mean"].loc["skill_defense"].values
+print("\n\nPredicció de resultat amb els següents equips: ")
+print(f"Equip Local: {j1} + {j2}")
+print(f"Equip Visitant: {j3} + {j4}\n")
+# Extraiem els valors mitjans de les habilitats dels jugadors
+baseline_mean = summary.loc["baseline_scoring", "mean"]
+atk_j1 = summary.loc[f"skill_attack[{player_codes_dict[j1]}]", "mean"]
+def_j2 = summary.loc[f"skill_defense[{player_codes_dict[j2]}]", "mean"]
+atk_j3 = summary.loc[f"skill_attack[{player_codes_dict[j3]}]", "mean"]
+def_j4 = summary.loc[f"skill_defense[{player_codes_dict[j4]}]", "mean"]
 
-# Calculem la diferència de gols esperada per a aquest nou partit
-pred_diff = (mean_atk[atk_l_nou] + mean_def[def_l_nou]) - (mean_atk[atk_v_nou] + mean_def[def_v_nou])
+# Calculem la lambda del nou partit (nombre de gols esperats per partit) per a cada equip
+lambda_L = np.exp(baseline_mean + atk_j1 - def_j4)
+lambda_V = np.exp(baseline_mean + atk_j3 - def_j2)
 
-print(f"Diferència de gols esperada: {pred_diff:.2f}")
-if pred_diff > 0:
-    print("Predicció: Guanya l'equip Local")
-else:
-    print("Predicció: Guanya l'equip Visitant")
+# Calculem les probabilitats de fer 0, 1, 2 o 3 gols per a cadascú d'acord amb la distribució de Poisson
+prob_L = [stats.poisson.pmf(k, lambda_L) for k in [0, 1, 2, 3]]
+prob_V = [stats.poisson.pmf(k, lambda_V) for k in [0, 1, 2, 3]]
+
+# Normalitzem perquè sumin 1 (per corregir el tall del futbolí a 3 gols)
+prob_L /= np.sum(prob_L)
+prob_V /= np.sum(prob_V)
+
+# Creem la matriu de marcadors exactes (6 combinacions reals de final de partit)
+resultats_possibles = {
+    "3-0": prob_L[3] * prob_V[0],
+    "3-1": prob_L[3] * prob_V[1],
+    "3-2": prob_L[3] * prob_V[2],
+    "0-3": prob_L[0] * prob_V[3],
+    "1-3": prob_L[1] * prob_V[3],
+    "2-3": prob_L[2] * prob_V[3]
+}
+
+print("Resultats amb la mitjana de la posterior:")
+# Ara el teu model et dirà exactament quina probabilitat hi ha de cada marcador!
+for marcador, p in resultats_possibles.items():
+    print(f"Probabilitat de {marcador}: {p*100:.1f}%")
+
+
+#########################################################
+#### Predicció de resultat a partir de la posterior #####
+#########################################################
+#Extraiem la posterior
+posterior = trace.posterior
+
+# Desem tots els valors de la posterior en arrays 1D per a cada jugador i per al baseline
+baseline_posterior = posterior['baseline_scoring'].values.flatten()
+skill_atk_l_posterior = posterior['skill_attack'].values[:, :, player_codes_dict[j1]].flatten()
+skill_def_l_posterior = posterior['skill_defense'].values[:, :, player_codes_dict[j2]].flatten()
+skill_atk_v_posterior = posterior['skill_attack'].values[:, :, player_codes_dict[j3]].flatten()
+skill_def_v_posterior = posterior['skill_defense'].values[:, :, player_codes_dict[j4]].flatten()
+
+# Calculem les lambdes per a cada simulació de la posterior
+lambda_l_posterior = np.exp(baseline_posterior + skill_atk_l_posterior - skill_def_v_posterior)
+lambda_v_posterior = np.exp(baseline_posterior + skill_atk_v_posterior - skill_def_l_posterior)
+
+# Simulem la probabilitat que cada equip faci 0, 1, 2 o 3 gols a cada partit
+gols = np.array([0, 1, 2, 3])[:, np.newaxis]  # Shape: (4, 1)
+prob_L_posterior = stats.poisson.pmf(gols, lambda_l_posterior)
+prob_V_posterior = stats.poisson.pmf(gols, lambda_v_posterior)
+
+# Normalitzem perquè sumin 1 (per corregir el tall del futbolí a 3 gols)
+prob_L_posterior = prob_L_posterior / np.sum(prob_L, axis=0)
+prob_V_posterior = prob_V_posterior / np.sum(prob_V, axis=0)
+
+# Creem la matriu de marcadors exactes (6 combinacions reals de final de partit)
+resultats_possibles = {
+    "3-0": np.array([np.mean(prob_L_posterior[3] * prob_V_posterior[0]), np.std(prob_L_posterior[3] * prob_V_posterior[0])]),
+    "3-1": np.array([np.mean(prob_L_posterior[3] * prob_V_posterior[1]), np.std(prob_L_posterior[3] * prob_V_posterior[1])]),
+    "3-2": np.array([np.mean(prob_L_posterior[3] * prob_V_posterior[2]), np.std(prob_L_posterior[3] * prob_V_posterior[2])]),
+    "0-3": np.array([np.mean(prob_L_posterior[0] * prob_V_posterior[3]), np.std(prob_L_posterior[0] * prob_V_posterior[3])]),
+    "1-3": np.array([np.mean(prob_L_posterior[1] * prob_V_posterior[3]), np.std(prob_L_posterior[1] * prob_V_posterior[3])]),
+    "2-3": np.array([np.mean(prob_L_posterior[2] * prob_V_posterior[3]), np.std(prob_L_posterior[2] * prob_V_posterior[3])])
+}
+
+print("\nResultats amb la posterior:")
+# Ara el teu model et dirà exactament quina probabilitat hi ha de cada marcador!
+for marcador, p in resultats_possibles.items():
+    print(f"Probabilitat de {marcador}: {p[0]*100:.1f} +- {p[1]*100:.1f}%")
+
+############################################################
+############# Gràfica de possibles resultats ###############
+############################################################
+###### Serà una matriu 6 x 6 amb els possibles resultats
+resultats_matriu = np.zeros((4,4))
+for gols_local, gols_visitant in list(itertools.product([0, 1, 2, 3], [0, 1, 2, 3])):
+    key = str(gols_local) + '-' + str(gols_visitant)
+    print(key)
+    if key in resultats_possibles.keys():
+        prob = resultats_possibles[key][0]
+        plt.text(gols_visitant, gols_local, str(prob)[:4])
+    else:
+        prob = np.nan
+
+    resultats_matriu[gols_local, gols_visitant] = prob
+
+plt.title(f"Probabilitat de gols\nLocal:{j1}-{j2}    Visitant:{j3}-{j4}")
+plt.imshow(resultats_matriu)
+plt.xticks([0, 1, 2, 3])
+plt.xlabel('Gols visitant')
+plt.yticks([0,1,2,3])
+plt.ylabel("Gols local")
+plt.savefig('../results/Bayesian_prediction/result_probability_bayesian.png', dpi=300, bbox_inches='tight')
+plt.show()
+
+############################################################
+########### Gràfica de forest plot #########################
+############################################################
+# Gràfica de bosc per a l'atac de tots els jugadors
+#az.plot_forest(trace, var_names=["skill_attack", "skill_defense"], combined=True)
+
+means_elo_atk = []
+lower_bounds_atk = []
+upper_bounds_atk = []
+means_elo_def = []
+lower_bounds_def = []
+upper_bounds_def = []
+for i in range(n_players):
+    player_samples_atk = trace.posterior['skill_attack'].values[:,:, i].flatten()
+    player_samples_def = trace.posterior['skill_defense'].values[:,:, i].flatten()
+
+    player_samples_atk_elo = scaler_attack.inverse_transform(player_samples_atk.reshape(-1, 1)).flatten()
+    player_samples_def_elo = scaler_defense.inverse_transform(player_samples_def.reshape(-1, 1)).flatten()
+
+    mean_elo_atk = np.mean(player_samples_atk_elo)
+    lower_bound_atk = np.percentile(player_samples_atk_elo, 2.5)
+    upper_bound_atk = np.percentile(player_samples_atk_elo, 97.5)
+    mean_elo_def = np.mean(player_samples_def_elo)
+    lower_bound_def = np.percentile(player_samples_def_elo, 2.5)
+    upper_bound_def = np.percentile(player_samples_def_elo, 97.5)
+    means_elo_atk.append(mean_elo_atk)
+    lower_bounds_atk.append(lower_bound_atk)
+    upper_bounds_atk.append(upper_bound_atk)
+    means_elo_def.append(mean_elo_def)
+    lower_bounds_def.append(lower_bound_def)
+    upper_bounds_def.append(upper_bound_def)
+
+# Calculem la longitud dels rutes d'error (requerit per plt.errorbar)
+error_left_atk = np.array(means_elo_atk) - np.array(lower_bounds_atk)
+error_right_atk = np.array(upper_bounds_atk) - np.array(means_elo_atk)
+error_left_def = np.array(means_elo_def) - np.array(lower_bounds_def)
+error_right_def = np.array(upper_bounds_def) - np.array(means_elo_def)
+
+# Noms dels jugadors per a l'eix Y (opcional)
+noms_jugadors = [f" {encoder_names.inverse_transform([i])[0]}" for i in range(n_players)]
+
+# Pintem el Forest Plot manual
+fig, axs = plt.subplots(figsize=(8, 10), ncols = 1, nrows = 2)
+axs = axs.flatten()
+
+axs[0].errorbar(means_elo_atk, noms_jugadors, xerr=[error_left_atk, error_right_atk], fmt='o', color='teal', capsize=5,
+             elinewidth=2)
+axs[1].errorbar(means_elo_def, noms_jugadors, xerr=[error_left_def, error_right_def], fmt='o', color='teal', capsize=5,
+             elinewidth=2)
+axs[0].set_title("ELO Attack (94% HDI)")
+axs[1].set_title("ELO Defense (94% HDI)")
+
+axs[1].set_xlabel("ELO points")
+plt.grid(axis='x', linestyle='--', alpha=0.7)
+plt.savefig('../results/Bayesian_prediction/ELO_individual_bayesian.png', dpi=300, bbox_inches='tight')
+plt.show()
+plt.clf()
+
+########### Gràfica de ELO Attack vs ELO Defense
+fig,ax = plt.subplots(figsize=(8,5))
+
+ax.errorbar(means_elo_atk, means_elo_def, xerr=[error_left_atk, error_right_atk], yerr=[error_left_def, error_right_def],
+            fmt='o', color ='teal', capsize=5, elinewidth=2)
+ax.hlines(1000, xmin=800, xmax=1150, linestyle='--', color ='gray', alpha = 0.7)
+ax.vlines(1000, ymin=850, ymax=1050, linestyle='--', color ='gray', alpha = 0.7)
+
+for i in range(n_players):
+    nom_jugador = encoder_names.inverse_transform([i])[0]
+    ax.text(means_elo_atk[i], means_elo_def[i], nom_jugador, fontsize=9)
+ax.set_xlabel("ELO Attack (94% HDI)")
+ax.set_ylabel("ELO Defense (94% HDI)")
+
+plt.savefig('../results/Bayesian_prediction/ELO_paired_bayesian.png', dpi=300, bbox_inches='tight')
+plt.show()
