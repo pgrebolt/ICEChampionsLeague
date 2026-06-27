@@ -59,6 +59,7 @@ Optionally, the project also includes a file used to create a Machine Learning p
 
 ## Enllaços als outputs
 [Històric de resultats](results/historical/)
+[Inferència bayesiana](results/Bayesian_prediction/)
 
 [Season 6](results/Season6/)
 [Season 5](results/Season5/)
@@ -71,7 +72,7 @@ El sistema ELO és l'emprat per classificar el nivell de cada jugador. ## ELO ra
 
 ## ELO rating
 
-El sistema ELO és un algoritme emprat en compteticions com els escacs per classificar els jugadors en funció del seu nivell. Si un jugador amb alt nivell guanya a un de baix nivell, la seva valoració no canviarà significativament. Ara bé, si és al revés, aleshores la puntuació del d'alt nivell baixarà notablement i la del de baix nivell pujarà bastant.
+El sistema ELO és un algoritme emprat en competicions com els escacs per classificar els jugadors en funció del seu nivell. Si un jugador amb alt nivell guanya a un de baix nivell, la seva valoració no canviarà significativament. Ara bé, si és al revés, aleshores la puntuació del d'alt nivell baixarà notablement i la del de baix nivell pujarà bastant.
 
 Sigui un jugador A amb puntuació $s_A$ i un jugador B amb puntuació $s_B$, aleshores la probabilitat que guanyi A en un enfrontament ve descrita, segons el model, com
 
