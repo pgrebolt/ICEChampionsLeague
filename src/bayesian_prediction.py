@@ -276,7 +276,7 @@ for gols_local, gols_visitant in list(itertools.product([0, 1, 2, 3], [0, 1, 2, 
     print(key)
     if key in resultats_possibles.keys():
         prob = resultats_possibles[key][0]
-        plt.text(gols_visitant, gols_local, str(prob)[:4])
+        plt.text(gols_visitant, gols_local, str(prob)[:4], ha='center', va='center')
     else:
         prob = np.nan
 
@@ -364,4 +364,33 @@ ax.set_xlabel("ELO Attack (94% HDI)")
 ax.set_ylabel("ELO Defense (94% HDI)")
 
 plt.savefig('../results/Bayesian_prediction/ELO_paired_bayesian.png', dpi=300, bbox_inches='tight')
+plt.show()
+
+########### Gràfica de ELO Attack vs ELO Defense en log
+fig,ax = plt.subplots(figsize=(8,5))
+
+def log_errorbar(x, xerr):
+    x = np.array(x)
+    xerr = np.array(xerr)
+    return 1/x * xerr
+print(log_errorbar(means_elo_def, error_left_def))
+ax.errorbar(np.log(means_elo_atk), np.log(means_elo_def), xerr=[log_errorbar(means_elo_atk, error_left_atk), log_errorbar(means_elo_atk, error_right_atk)],
+            yerr=[log_errorbar(means_elo_def, error_left_def), log_errorbar(means_elo_def, error_right_def)],
+            fmt='o', color ='teal', capsize=5, elinewidth=2)
+
+#ax.scatter(np.log(means_elo_atk), np.log(means_elo_def),
+#            marker='o', color ='teal')
+
+ax.hlines(np.log(1000), xmin=np.log(800), xmax=np.log(1150), linestyle='--', color ='gray', alpha = 0.7)
+ax.vlines(np.log(1000), ymin=np.log(850), ymax=np.log(1050), linestyle='--', color ='gray', alpha = 0.7)
+
+for i in range(n_players):
+    nom_jugador = encoder_names.inverse_transform([i])[0]
+    ax.text(np.log(means_elo_atk[i]), np.log(means_elo_def[i]), nom_jugador, fontsize=9)
+ax.set_xlabel("log (ELO Attack) (94% HDI)")
+ax.set_ylabel("log (ELO Defense) (94% HDI)")
+ax.set_yscale('log')
+ax.set_xscale('log')
+
+plt.savefig('../results/Bayesian_prediction/ELO_paired_bayesian_log.png', dpi=300, bbox_inches='tight')
 plt.show()
