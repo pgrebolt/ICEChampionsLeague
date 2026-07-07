@@ -171,7 +171,7 @@ plt.show()
 ############ Simulació d'un nou partit ####################
 ###########################################################
 # Jugadors que juguen al nou partit
-j1, j2, j3, j4 = 'Gisela', 'Rebeca', 'Víctor', 'Pau' #exemple
+j1, j2, j3, j4 = 'Pedro', 'Dani', 'Luis', 'Víctor' #exemple
 
 print("\n\nPredicció de resultat amb els següents equips: ")
 print(f"Equip Local: {j1} + {j2}")
@@ -393,4 +393,31 @@ ax.set_yscale('log')
 ax.set_xscale('log')
 
 plt.savefig('../results/Bayesian_prediction/ELO_paired_bayesian_log.png', dpi=300, bbox_inches='tight')
+plt.show()
+
+### Gràfica de l'ELO predit pel model bayesià i l'ELO calculat
+# Atac
+plt.clf()
+plt.errorbar(means_elo_atk, stats_xr['ELOAttack'].isel(match=-1).values, xerr=[error_left_atk, error_right_atk], alpha=0.5,
+             fmt='o')
+plt.plot(np.linspace(800, 1200, 100), np.linspace(800, 1200, 100), '--', alpha=0.5, color='gray')
+for i in range(n_players):
+    nom_jugador = encoder_names.inverse_transform([i])[0]
+    plt.text(means_elo_atk[i], stats_xr['ELOAttack'].isel(match=-1).sel(player=str(nom_jugador)).values, nom_jugador, fontsize=9)
+plt.ylabel("Actual ELO Attack")
+plt.xlabel("Predicted ELO Attack")
+plt.savefig("../results/Bayesian_prediction/ELO_attack_predicted_vs_actual.png", dpi=300, bbox_inches='tight')
+plt.show()
+
+# Defensa
+plt.clf()
+plt.errorbar(means_elo_def, stats_xr['ELODefense'].isel(match=-1).values, xerr=[error_left_def, error_right_def], alpha=0.5,
+             fmt='o')
+plt.plot(np.linspace(800, 1200, 100), np.linspace(800, 1200, 100), '--', alpha=0.5, color='gray')
+for i in range(n_players):
+    nom_jugador = encoder_names.inverse_transform([i])[0]
+    plt.text(means_elo_def[i], stats_xr['ELODefense'].isel(match=-1).sel(player=str(nom_jugador)).values, nom_jugador, fontsize=9)
+plt.ylabel("Actual ELO Defense")
+plt.xlabel("Predicted ELO Defense")
+plt.savefig("../results/Bayesian_prediction/ELO_defense_predicted_vs_actual.png", dpi=300, bbox_inches='tight')
 plt.show()
