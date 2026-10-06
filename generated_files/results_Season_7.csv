@@ -90,3 +90,10 @@ D,Jugador 1,Jugador 2,Jugador 3,Jugador 4,Gols 1,Gols 2,Gols 3,Gols 4,Local,Visi
 16,Maider,Antía,Luis,Pau,3,0,1,0,3,1,Local
 16,Maider,Antía,Pedro,Luis,1,0,1,2,1,3,Visitant
 16,Antía,Pau,Pedro,Luis,1,2,1,0,3,1,Local
+17,Víctor,Antía,Guille,Dani,3,0,0,1,3,1,Local
+17,Víctor,Antía,Pau,Luis,1,1,2,1,2,3,Visitant
+17,Guille,Dani,Pau,Luis,1,0,1,2,1,3,Visitant
+17,Guille,Luis,Antía,Dani,3,0,0,1,3,1,Local
+17,Guille,Luis,0,Pau,0,2,0,3,2,3,Visitant
+17,Víctor,Dani,0,Pau,2,1,0,0,3,0,Local
+17,Víctor,Dani,Antía,Guille,1,0,1,2,1,3,Visitant
